@@ -1,0 +1,16 @@
+node_modules/
+backend/node_modules/
+frontend/node_modules/
+
+.env
+backend/.env
+frontend/.env
+
+frontend/dist/
+backend/yorum.db
+backend/yorum.db-shm
+backend/yorum.db-wal
+
+.DS_Store
+Thumbs.db
+API KEY.txt

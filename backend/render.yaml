@@ -1,0 +1,40 @@
+databases:
+  - name: yorum-db
+    databaseName: yorum_db
+    user: yorum_user
+    plan: free
+    region: frankfurt
+
+services:
+  - type: web
+    name: yorum-analizi-backend
+    env: node
+    region: frankfurt
+    plan: free
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: GROQ_API_KEY
+        sync: false
+      - key: DEEPSEEK_API_KEY
+        sync: false
+      - key: AUTH_SECRET
+        sync: false
+      - key: STRIPE_SECRET_KEY
+        sync: false
+      - key: STRIPE_SUCCESS_URL
+        sync: false
+      - key: STRIPE_CANCEL_URL
+        sync: false
+      - key: DATABASE_URL
+        fromDatabase:
+          name: yorum-db
+          property: connectionString
+      - key: FRONTEND_URL
+        sync: false
