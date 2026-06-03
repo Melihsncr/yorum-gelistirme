@@ -40,13 +40,13 @@ router.post('/compare', async (req, res) => {
       return res.status(400).json({ error: 'Yorum boş olamaz' });
     }
 
-    const [gemini, llama, deepseek] = await Promise.all([
+    const [gemini, llama, openrouter] = await Promise.all([
       analyzeComment(comment.trim(), tone, 'gemini'),
       analyzeComment(comment.trim(), tone, 'llama'),
-      analyzeComment(comment.trim(), tone, 'deepseek'),
+      analyzeComment(comment.trim(), tone, 'openrouter'),
     ]);
 
-    res.json({ gemini, llama, deepseek });
+    res.json({ gemini, llama, openrouter });
   } catch (error) {
     res.status(500).json({ error: error.message || 'Karşılaştırma sırasında hata oluştu' });
   }

@@ -11,7 +11,7 @@ const NAV_ITEMS = [
 const MODELS = [
   { key: 'gemini', label: 'Gemini' },
   { key: 'llama', label: 'Llama' },
-  { key: 'deepseek', label: 'DeepSeek' },
+  { key: 'openrouter', label: 'OpenRouter' },
 ];
 
 export default function Sidebar({ open, onClose, apiStatus = {} }) {

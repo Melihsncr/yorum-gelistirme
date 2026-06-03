@@ -9,7 +9,7 @@ import { clearSession, getStoredUser } from '../utils/auth.js';
 export default function Layout() {
   const location = useLocation();
   const [open, setOpen] = useState(false);
-  const [apiStatus, setApiStatus] = useState({ gemini: false, llama: false, deepseek: false });
+  const [apiStatus, setApiStatus] = useState({ gemini: false, llama: false, openrouter: false });
   const [user, setUser] = useState(getStoredUser());
 
   useEffect(() => {

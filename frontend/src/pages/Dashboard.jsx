@@ -201,7 +201,7 @@ export default function Dashboard() {
   const quickFlows = [
     { to: '/analyze', title: 'Tek Yorum Analizi', desc: 'Bir yorumu aninda isle ve cevap onerisi uret.' },
     { to: '/bulk', title: 'Toplu CSV Akisi', desc: 'Yorum setlerini tek seferde yukle, analiz et ve kaydet.' },
-    { to: '/compare', title: 'Model Karsilastirma', desc: 'Gemini, Llama ve DeepSeek sonucunu yan yana gor.' },
+    { to: '/compare', title: 'Model Karsilastirma', desc: 'Gemini, Llama ve OpenRouter sonucunu yan yana gor.' },
   ];
 
   return (

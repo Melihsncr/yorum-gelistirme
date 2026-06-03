@@ -4,7 +4,7 @@ import { api } from '../api/client.js';
 const MODEL_LABELS = {
   gemini: 'Gemini 2.5 Flash',
   llama: 'Groq Llama 3.3 (70B)',
-  deepseek: 'DeepSeek-R1',
+  openrouter: 'OpenRouter Free',
 };
 
 const SENTIMENT_CLASS = {
@@ -17,7 +17,7 @@ const SENTIMENT_CLASS = {
 const MODEL_OPTIONS = [
   { key: 'gemini', logo: 'G', logoClass: 'engine-logo-g', name: 'Gemini 2.5 Flash', sub: 'Önerilen - hızlı ve dengeli' },
   { key: 'llama', logo: 'L', logoClass: 'engine-logo-l', name: 'Groq Llama 3.3', sub: '70B - hızlı cevap üretimi' },
-  { key: 'deepseek', logo: 'DS', logoClass: 'engine-logo-d', name: 'DeepSeek-R1', sub: 'Derin akıl yürütme gücü' },
+  { key: 'openrouter', logo: 'OR', logoClass: 'engine-logo-d', name: 'OpenRouter Free', sub: 'Ucretsiz model yonlendirme' },
 ];
 
 const TIP_CARDS = [

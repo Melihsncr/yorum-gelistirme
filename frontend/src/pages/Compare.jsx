@@ -11,7 +11,7 @@ const SENTIMENT_CLASS = {
 const MODEL_DISPLAY = {
   gemini: 'Google Gemini 2.5',
   llama: 'Groq Llama 3.3 (70B)',
-  deepseek: 'DeepSeek-R1',
+  openrouter: 'OpenRouter Free',
 };
 
 function ModelCard({ data }) {
@@ -98,13 +98,13 @@ export default function Compare() {
       verdict = {
         icon: 'fa-handshake-angle',
         text: `Çoğunluk kararı: ${majority[0]}`,
-        sub: `Gemini: ${results.gemini?.sentiment} - Llama: ${results.llama?.sentiment} - DeepSeek: ${results.deepseek?.sentiment}`,
+        sub: `Gemini: ${results.gemini?.sentiment} - Llama: ${results.llama?.sentiment} - OpenRouter: ${results.openrouter?.sentiment}`,
       };
     } else {
       verdict = {
         icon: 'fa-triangle-exclamation',
         text: 'Modeller farklı yorumladı',
-        sub: `Gemini: ${results.gemini?.sentiment} - Llama: ${results.llama?.sentiment} - DeepSeek: ${results.deepseek?.sentiment}`,
+        sub: `Gemini: ${results.gemini?.sentiment} - Llama: ${results.llama?.sentiment} - OpenRouter: ${results.openrouter?.sentiment}`,
       };
     }
   }
@@ -126,14 +126,14 @@ export default function Compare() {
           <span className="flow-visual-kicker">Model görünümü</span>
           <h2>Aynı yorumu üç farklı model gözünden değerlendir.</h2>
           <p>
-            Gemini, Llama ve DeepSeek çıktıları tek sahnede görünsün; hemfikir oldukları ve ayrıştıkları
+            Gemini, Llama ve OpenRouter çıktıları tek sahnede görünsün; hemfikir oldukları ve ayrıştıkları
             noktalar ilk bakışta seçilebilsin.
           </p>
         </div>
         <div className="compare-visual-stack">
           <div className="compare-visual-chip">Gemini • Pozitif</div>
           <div className="compare-visual-chip">Llama • Nötr</div>
-          <div className="compare-visual-chip">DeepSeek • Negatif</div>
+          <div className="compare-visual-chip">OpenRouter • Negatif</div>
         </div>
       </section>
 
@@ -163,7 +163,7 @@ export default function Compare() {
         <div className="card compare-loading-card">
           <div className="loading-dots compare-loading-dots"><span /><span /><span /></div>
           <div className="loading-title">3 model paralel analiz ediyor...</div>
-          <div className="loading-sub">Gemini 2.5 - Groq Llama 3.3 - DeepSeek-R1</div>
+          <div className="loading-sub">Gemini 2.5 - Groq Llama 3.3 - OpenRouter Free</div>
         </div>
       )}
 
@@ -173,7 +173,7 @@ export default function Compare() {
             {[
               { key: 'gemini', label: 'Gemini 2.5', pill: 'mp-gemini', top: 'compare-top-gem', provider: 'Google' },
               { key: 'llama', label: 'Groq Llama 3.3', pill: 'mp-llama', top: 'compare-top-lla', provider: 'Groq' },
-              { key: 'deepseek', label: 'DeepSeek-R1', pill: 'mp-deepseek', top: 'compare-top-dsk', provider: 'DeepSeek' },
+              { key: 'openrouter', label: 'OpenRouter Free', pill: 'mp-deepseek', top: 'compare-top-dsk', provider: 'OpenRouter' },
             ].map((item) => (
               <div key={item.key} className={`compare-card ${item.top}`}>
                 <div className="compare-card-header">
@@ -198,7 +198,7 @@ export default function Compare() {
             <div className="header-actions">
               <button className="btn btn-ghost" onClick={() => saveModel('gemini')}>Gemini sonucunu kaydet</button>
               <button className="btn btn-ghost" onClick={() => saveModel('llama')}>Llama sonucunu kaydet</button>
-              <button className="btn btn-ghost" onClick={() => saveModel('deepseek')}>DeepSeek sonucunu kaydet</button>
+              <button className="btn btn-ghost" onClick={() => saveModel('openrouter')}>OpenRouter sonucunu kaydet</button>
             </div>
             {saveMessage && <div className="alert alert-success compare-save-alert"><i className="fas fa-check-circle" /> {saveMessage}</div>}
           </div>

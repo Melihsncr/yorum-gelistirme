@@ -143,7 +143,7 @@ export default function Bulk() {
             <select className="form-control" value={model} onChange={(event) => setModel(event.target.value)}>
               <option value="gemini">Google Gemini 2.5</option>
               <option value="llama">Groq Llama 3.3</option>
-              <option value="deepseek">DeepSeek-R1</option>
+              <option value="openrouter">OpenRouter Free</option>
             </select>
           </div>
           <div className="form-group">
