@@ -486,9 +486,9 @@ select {
 
 .page-intro-title {
   margin: 10px 0 8px;
-  font-size: clamp(28px, 4vw, 42px);
+  font-size: clamp(24px, 3.4vw, 36px);
   line-height: 1.08;
-  letter-spacing: -1.4px;
+  letter-spacing: -1.1px;
 }
 
 .page-intro-sub {
@@ -542,9 +542,9 @@ select {
 
 .landing-title {
   margin: 14px 0 18px;
-  font-size: clamp(48px, 7vw, 82px);
-  line-height: 0.98;
-  letter-spacing: -3.2px;
+  font-size: clamp(38px, 5.9vw, 68px);
+  line-height: 1.01;
+  letter-spacing: -2.4px;
   font-weight: 700;
 }
 
@@ -1399,6 +1399,21 @@ select {
   background: rgba(255, 255, 255, 0.03);
   outline: none;
   transition: var(--transition);
+}
+
+select.form-control {
+  color-scheme: dark;
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background-color: rgba(255, 255, 255, 0.03);
+  color: var(--text);
+}
+
+select.form-control option,
+select.form-control optgroup {
+  background: #141922;
+  color: var(--text);
 }
 
 .form-control:focus {
