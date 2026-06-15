@@ -11,6 +11,8 @@ export default function Auth() {
   const [mode, setMode] = useState(initialMode);
   const [message, setMessage] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showPasswordRepeat, setShowPasswordRepeat] = useState(false);
   const [form, setForm] = useState({
     fullName: '',
     email: '',
@@ -37,6 +39,8 @@ export default function Auth() {
     setMode(nextMode);
     setParams(nextMode === 'signup' ? { mode: 'signup' } : { mode: 'login' });
     setMessage('');
+    setShowPassword(false);
+    setShowPasswordRepeat(false);
   }
 
   function updateField(key, value) {
@@ -142,26 +146,46 @@ export default function Auth() {
 
             <label className="form-group">
               <span className="form-label">Şifre</span>
-              <input
-                className="form-control"
-                type="password"
-                placeholder="••••••••"
-                value={form.password}
-                onChange={(event) => updateField('password', event.target.value)}
-              />
+              <div className="password-field">
+                <input
+                  className="form-control password-input"
+                  type={showPassword ? 'text' : 'password'}
+                  placeholder="••••••••"
+                  value={form.password}
+                  onChange={(event) => updateField('password', event.target.value)}
+                />
+                <button
+                  type="button"
+                  className="password-toggle"
+                  onClick={() => setShowPassword((value) => !value)}
+                  aria-label={showPassword ? 'Şifreyi gizle' : 'Şifreyi göster'}
+                >
+                  <i className={`fas ${showPassword ? 'fa-eye-slash' : 'fa-eye'}`} />
+                </button>
+              </div>
             </label>
 
             {mode === 'signup' && (
               <>
                 <label className="form-group">
                   <span className="form-label">Şifre tekrar</span>
-                  <input
-                    className="form-control"
-                    type="password"
-                    placeholder="••••••••"
-                    value={form.passwordRepeat}
-                    onChange={(event) => updateField('passwordRepeat', event.target.value)}
-                  />
+                  <div className="password-field">
+                    <input
+                      className="form-control password-input"
+                      type={showPasswordRepeat ? 'text' : 'password'}
+                      placeholder="••••••••"
+                      value={form.passwordRepeat}
+                      onChange={(event) => updateField('passwordRepeat', event.target.value)}
+                    />
+                    <button
+                      type="button"
+                      className="password-toggle"
+                      onClick={() => setShowPasswordRepeat((value) => !value)}
+                      aria-label={showPasswordRepeat ? 'Şifreyi gizle' : 'Şifreyi göster'}
+                    >
+                      <i className={`fas ${showPasswordRepeat ? 'fa-eye-slash' : 'fa-eye'}`} />
+                    </button>
+                  </div>
                 </label>
 
                 <label className="form-group">
