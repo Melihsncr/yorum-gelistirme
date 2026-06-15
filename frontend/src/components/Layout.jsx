@@ -3,6 +3,7 @@ import { Outlet, useLocation } from 'react-router-dom';
 import Sidebar from './Sidebar.jsx';
 import Topbar from './Topbar.jsx';
 import Footer from './Footer.jsx';
+import AssistantWidget from './AssistantWidget.jsx';
 import { api } from '../api/client.js';
 import { clearSession, getStoredUser } from '../utils/auth.js';
 
@@ -51,6 +52,7 @@ export default function Layout() {
             <Outlet context={{ user, setUser }} />
           </div>
         </main>
+        <AssistantWidget />
         <Footer />
       </div>
     </div>

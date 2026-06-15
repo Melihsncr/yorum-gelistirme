@@ -542,7 +542,7 @@ select {
 
 .landing-title {
   margin: 14px 0 18px;
-  font-size: clamp(32px, 4.9vw, 56px);
+  font-size: clamp(30px, 4.2vw, 50px);
   line-height: 1.03;
   letter-spacing: -1.8px;
   font-weight: 700;
@@ -3287,7 +3287,7 @@ body {
 .linear-species-title {
   margin: 0;
   max-width: 1500px;
-  font-size: clamp(54px, 6vw, 78px);
+  font-size: clamp(40px, 4.8vw, 64px);
   line-height: 0.98;
   letter-spacing: -3px;
   font-weight: 650;
@@ -3413,10 +3413,201 @@ body {
 .linear-story-copy h2 {
   margin: 0;
   max-width: 620px;
-  font-size: 60px;
+  font-size: clamp(34px, 4.4vw, 52px);
   line-height: 0.98;
   letter-spacing: -2.5px;
   font-weight: 650;
+}
+
+.assistant-widget {
+  position: fixed;
+  right: 26px;
+  bottom: 26px;
+  z-index: 140;
+  display: grid;
+  justify-items: end;
+  gap: 14px;
+}
+
+.assistant-panel,
+.assistant-launcher {
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.045), rgba(255, 255, 255, 0.02)),
+    rgba(12, 16, 24, 0.96);
+  box-shadow: 0 20px 48px rgba(0, 0, 0, 0.28);
+}
+
+.assistant-panel {
+  width: min(380px, calc(100vw - 28px));
+  padding: 18px;
+  border-radius: 24px;
+  backdrop-filter: blur(18px);
+}
+
+.assistant-panel-header,
+.assistant-action-card,
+.assistant-launcher,
+.assistant-bubble {
+  display: flex;
+}
+
+.assistant-panel-header {
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  margin-bottom: 16px;
+}
+
+.assistant-kicker {
+  display: block;
+  margin-bottom: 6px;
+  color: #8fd7ff;
+  font-size: 10px;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+}
+
+.assistant-panel-header strong,
+.assistant-launcher-copy strong {
+  font-size: 15px;
+}
+
+.assistant-close-btn {
+  width: 36px;
+  height: 36px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--text);
+  cursor: pointer;
+}
+
+.assistant-thread {
+  display: grid;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.assistant-bubble {
+  gap: 10px;
+  align-items: flex-start;
+  max-width: 100%;
+  padding: 14px 16px;
+  border-radius: 18px;
+}
+
+.assistant-bubble p,
+.assistant-bubble span {
+  margin: 0;
+  line-height: 1.55;
+}
+
+.assistant-bubble-bot {
+  color: #dfe7f4;
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.assistant-bubble-bot.compact {
+  padding-top: 12px;
+  padding-bottom: 12px;
+}
+
+.assistant-bubble-user {
+  justify-self: end;
+  color: #081017;
+  background: linear-gradient(135deg, #6dd3ce, #8fd7ff);
+}
+
+.assistant-bubble-icon {
+  color: #8fd7ff;
+  margin-top: 2px;
+}
+
+.assistant-actions {
+  display: grid;
+  gap: 10px;
+}
+
+.assistant-action-card {
+  align-items: flex-start;
+  gap: 12px;
+  width: 100%;
+  padding: 14px;
+  text-align: left;
+  color: var(--text);
+  cursor: pointer;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.025);
+  transition: var(--transition);
+}
+
+.assistant-action-card:hover {
+  transform: translateY(-1px);
+  background: rgba(255, 255, 255, 0.045);
+  border-color: rgba(143, 215, 255, 0.18);
+}
+
+.assistant-action-card i {
+  width: 38px;
+  height: 38px;
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  border-radius: 12px;
+  color: #8fd7ff;
+  background: rgba(143, 215, 255, 0.08);
+}
+
+.assistant-action-card strong,
+.assistant-action-card span,
+.assistant-launcher-copy strong,
+.assistant-launcher-copy small {
+  display: block;
+}
+
+.assistant-action-card span,
+.assistant-footer-note,
+.assistant-launcher-copy small {
+  color: var(--text-dim);
+}
+
+.assistant-action-card span {
+  margin-top: 4px;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.assistant-footer-note {
+  margin-top: 14px;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.assistant-launcher {
+  align-items: center;
+  gap: 12px;
+  min-width: 236px;
+  padding: 12px 14px;
+  border-radius: 18px;
+  color: var(--text);
+  cursor: pointer;
+}
+
+.assistant-launcher-icon {
+  width: 42px;
+  height: 42px;
+  display: grid;
+  place-items: center;
+  border-radius: 14px;
+  background: linear-gradient(135deg, rgba(109, 211, 206, 0.18), rgba(143, 215, 255, 0.2));
+  color: #bff3ee;
+}
+
+.assistant-launcher-copy small {
+  margin-top: 4px;
+  font-size: 12px;
 }
 
 .linear-story-detail p {
