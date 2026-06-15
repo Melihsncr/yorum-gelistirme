@@ -7,10 +7,9 @@ export default function Auth() {
   const navigate = useNavigate();
   const { setUser } = useOutletContext();
   const [params, setParams] = useSearchParams();
-  const initialMode = ['signup', 'reset'].includes(params.get('mode'))
+  const mode = ['signup', 'reset'].includes(params.get('mode'))
     ? params.get('mode')
     : 'login';
-  const [mode, setMode] = useState(initialMode);
   const [message, setMessage] = useState('');
   const [messageType, setMessageType] = useState('error');
   const [submitting, setSubmitting] = useState(false);
@@ -49,8 +48,7 @@ export default function Auth() {
   }, [mode]);
 
   function switchMode(nextMode) {
-    setMode(nextMode);
-    setParams(nextMode === 'login' ? { mode: 'login' } : { mode: nextMode });
+    setParams({ mode: nextMode });
     setMessage('');
     setMessageType('error');
     setShowPassword(false);
