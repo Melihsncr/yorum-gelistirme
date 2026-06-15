@@ -40,6 +40,7 @@ export const api = {
   createCheckout: (data) => request('POST', '/payments/checkout', data),
   signup: (data) => request('POST', '/auth/signup', data),
   login: (data) => request('POST', '/auth/login', data),
+  resetPassword: (data) => request('POST', '/auth/reset-password', data),
   getMe: () => request('GET', '/auth/me'),
   exportCsv: () => `${BASE}/api/export/csv`,
   exportExcel: () => `${BASE}/api/export/excel`,

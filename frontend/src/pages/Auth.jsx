@@ -7,9 +7,12 @@ export default function Auth() {
   const navigate = useNavigate();
   const { setUser } = useOutletContext();
   const [params, setParams] = useSearchParams();
-  const initialMode = params.get('mode') === 'signup' ? 'signup' : 'login';
+  const initialMode = ['signup', 'reset'].includes(params.get('mode'))
+    ? params.get('mode')
+    : 'login';
   const [mode, setMode] = useState(initialMode);
   const [message, setMessage] = useState('');
+  const [messageType, setMessageType] = useState('error');
   const [submitting, setSubmitting] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showPasswordRepeat, setShowPasswordRepeat] = useState(false);
@@ -21,24 +24,35 @@ export default function Auth() {
     teamName: '',
   });
 
-  const copy = useMemo(() => (
-    mode === 'signup'
-      ? {
-          title: 'Yeni hesap oluştur',
-          subtitle: 'Platform yorumlarını tek merkezde toplayacak hesabını birkaç adımda aç.',
-          cta: 'Kayıt ol',
-        }
-      : {
-          title: 'Hesabına giriş yap',
-          subtitle: 'Geçmiş analizlere, ekip akışlarına ve Pro özelliklerine kaldığın yerden devam et.',
-          cta: 'Giriş yap',
-        }
-  ), [mode]);
+  const copy = useMemo(() => {
+    if (mode === 'signup') {
+      return {
+        title: 'Yeni hesap oluştur',
+        subtitle: 'Platform yorumlarını tek merkezde toplayacak hesabını birkaç adımda aç.',
+        cta: 'Kayıt ol',
+      };
+    }
+
+    if (mode === 'reset') {
+      return {
+        title: 'Şifreni yenile',
+        subtitle: 'Kayıtlı e-posta adresini ve yeni şifreni girerek hesabına tekrar eriş.',
+        cta: 'Şifreyi güncelle',
+      };
+    }
+
+    return {
+      title: 'Hesabına giriş yap',
+      subtitle: 'Geçmiş analizlere, ekip akışlarına ve Pro özelliklerine kaldığın yerden devam et.',
+      cta: 'Giriş yap',
+    };
+  }, [mode]);
 
   function switchMode(nextMode) {
     setMode(nextMode);
-    setParams(nextMode === 'signup' ? { mode: 'signup' } : { mode: 'login' });
+    setParams(nextMode === 'login' ? { mode: 'login' } : { mode: nextMode });
     setMessage('');
+    setMessageType('error');
     setShowPassword(false);
     setShowPasswordRepeat(false);
   }
@@ -51,6 +65,7 @@ export default function Auth() {
     event.preventDefault();
     setSubmitting(true);
     setMessage('');
+    setMessageType('error');
 
     try {
       if (mode === 'signup') {
@@ -71,6 +86,24 @@ export default function Auth() {
         return;
       }
 
+      if (mode === 'reset') {
+        if (form.password !== form.passwordRepeat) {
+          throw new Error('Yeni şifre ve tekrar alanı eşleşmiyor.');
+        }
+
+        const data = await api.resetPassword({
+          email: form.email,
+          password: form.password,
+        });
+
+        setMessage(data.message || 'Şifre başarıyla güncellendi.');
+        setMessageType('success');
+        setShowPassword(false);
+        setShowPasswordRepeat(false);
+        setForm((current) => ({ ...current, password: '', passwordRepeat: '' }));
+        return;
+      }
+
       const data = await api.login({
         email: form.email,
         password: form.password,
@@ -81,6 +114,7 @@ export default function Auth() {
       navigate('/');
     } catch (error) {
       setMessage(error.message);
+      setMessageType('error');
     } finally {
       setSubmitting(false);
     }
@@ -145,7 +179,9 @@ export default function Auth() {
             </label>
 
             <label className="form-group">
-              <span className="form-label">Şifre</span>
+              <span className="form-label">
+                {mode === 'reset' ? 'Yeni şifre' : 'Şifre'}
+              </span>
               <div className="password-field">
                 <input
                   className="form-control password-input"
@@ -165,39 +201,41 @@ export default function Auth() {
               </div>
             </label>
 
-            {mode === 'signup' && (
-              <>
-                <label className="form-group">
-                  <span className="form-label">Şifre tekrar</span>
-                  <div className="password-field">
-                    <input
-                      className="form-control password-input"
-                      type={showPasswordRepeat ? 'text' : 'password'}
-                      placeholder="••••••••"
-                      value={form.passwordRepeat}
-                      onChange={(event) => updateField('passwordRepeat', event.target.value)}
-                    />
-                    <button
-                      type="button"
-                      className="password-toggle"
-                      onClick={() => setShowPasswordRepeat((value) => !value)}
-                      aria-label={showPasswordRepeat ? 'Şifreyi gizle' : 'Şifreyi göster'}
-                    >
-                      <i className={`fas ${showPasswordRepeat ? 'fa-eye-slash' : 'fa-eye'}`} />
-                    </button>
-                  </div>
-                </label>
-
-                <label className="form-group">
-                  <span className="form-label">Ekip adı</span>
+            {(mode === 'signup' || mode === 'reset') && (
+              <label className="form-group">
+                <span className="form-label">
+                  {mode === 'reset' ? 'Yeni şifre tekrar' : 'Şifre tekrar'}
+                </span>
+                <div className="password-field">
                   <input
-                    className="form-control"
-                    placeholder="Yorum Operasyon Ekibi"
-                    value={form.teamName}
-                    onChange={(event) => updateField('teamName', event.target.value)}
+                    className="form-control password-input"
+                    type={showPasswordRepeat ? 'text' : 'password'}
+                    placeholder="••••••••"
+                    value={form.passwordRepeat}
+                    onChange={(event) => updateField('passwordRepeat', event.target.value)}
                   />
-                </label>
-              </>
+                  <button
+                    type="button"
+                    className="password-toggle"
+                    onClick={() => setShowPasswordRepeat((value) => !value)}
+                    aria-label={showPasswordRepeat ? 'Şifreyi gizle' : 'Şifreyi göster'}
+                  >
+                    <i className={`fas ${showPasswordRepeat ? 'fa-eye-slash' : 'fa-eye'}`} />
+                  </button>
+                </div>
+              </label>
+            )}
+
+            {mode === 'signup' && (
+              <label className="form-group">
+                <span className="form-label">Ekip adı</span>
+                <input
+                  className="form-control"
+                  placeholder="Yorum Operasyon Ekibi"
+                  value={form.teamName}
+                  onChange={(event) => updateField('teamName', event.target.value)}
+                />
+              </label>
             )}
 
             <button type="submit" className="btn btn-primary btn-lg btn-full" disabled={submitting}>
@@ -225,10 +263,23 @@ export default function Auth() {
 
           <div className="auth-helper-row secondary">
             <Link to="/pricing" className="auth-inline-link">Planları incele</Link>
-            <button type="button" className="auth-inline-link" onClick={() => switchMode('login')}>Şifremi unuttum</button>
+            {mode === 'reset' ? (
+              <button type="button" className="auth-inline-link" onClick={() => switchMode('login')}>
+                Giriş ekranına dön
+              </button>
+            ) : (
+              <button type="button" className="auth-inline-link" onClick={() => switchMode('reset')}>
+                Şifremi unuttum
+              </button>
+            )}
           </div>
 
-          {message && <div className="alert alert-error"><i className="fas fa-circle-exclamation" /><span>{message}</span></div>}
+          {message && (
+            <div className={`alert ${messageType === 'success' ? 'alert-success' : 'alert-error'}`}>
+              <i className={`fas ${messageType === 'success' ? 'fa-circle-check' : 'fa-circle-exclamation'}`} />
+              <span>{message}</span>
+            </div>
+          )}
         </div>
       </div>
     </section>

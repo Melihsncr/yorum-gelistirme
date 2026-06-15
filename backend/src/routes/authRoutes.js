@@ -1,6 +1,11 @@
 import crypto from 'node:crypto';
 import { Router } from 'express';
-import { createUser, findUserByEmail, findUserById } from '../config/db.js';
+import {
+  createUser,
+  findUserByEmail,
+  findUserById,
+  updateUserPasswordByEmail,
+} from '../config/db.js';
 
 const router = Router();
 
@@ -129,6 +134,38 @@ router.post('/auth/login', async (req, res) => {
     res.json({ token, user: publicUser(user) });
   } catch (error) {
     res.status(500).json({ error: error.message || 'Giriş sırasında hata oluştu.' });
+  }
+});
+
+router.post('/auth/reset-password', async (req, res) => {
+  try {
+    const { email = '', password = '' } = req.body || {};
+
+    if (!email.trim() || !password.trim()) {
+      return res.status(400).json({ error: 'E-posta ve yeni şifre zorunludur.' });
+    }
+
+    if (password.length < 6) {
+      return res.status(400).json({ error: 'Yeni şifre en az 6 karakter olmalıdır.' });
+    }
+
+    const user = await findUserByEmail(email.trim());
+    if (!user) {
+      return res.status(404).json({ error: 'Bu e-posta ile kayıtlı kullanıcı bulunamadı.' });
+    }
+
+    const updatedUser = await updateUserPasswordByEmail(
+      email.trim().toLowerCase(),
+      hashPassword(password),
+    );
+
+    res.json({
+      success: true,
+      user: publicUser(updatedUser),
+      message: 'Şifre başarıyla güncellendi. Yeni şifren ile giriş yapabilirsin.',
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message || 'Şifre yenilenirken hata oluştu.' });
   }
 });
 

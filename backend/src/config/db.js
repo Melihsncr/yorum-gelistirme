@@ -159,3 +159,15 @@ export async function createUser({ fullName, email, passwordHash, teamName, plan
 
   return rows[0];
 }
+
+export async function updateUserPasswordByEmail(email, passwordHash) {
+  const { rows } = await getPool().query(
+    `UPDATE users
+     SET password_hash = $2
+     WHERE LOWER(email) = LOWER($1)
+     RETURNING id, created_at, full_name, email, team_name, plan`,
+    [email, passwordHash],
+  );
+
+  return rows[0] || null;
+}
