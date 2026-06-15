@@ -87,9 +87,14 @@ export default function AssistantWidget() {
       {open && (
         <section className="assistant-panel" aria-label="Yorum asistani">
           <div className="assistant-panel-header">
-            <div>
+            <div className="assistant-header-copy">
+              <div className="assistant-avatar" aria-hidden="true">
+                <span className="assistant-avatar-face">😊</span>
+              </div>
+              <div>
               <span className="assistant-kicker">Akilli yardimci</span>
               <strong>Yorum Asistani</strong>
+              </div>
             </div>
             <button
               type="button"
@@ -103,7 +108,7 @@ export default function AssistantWidget() {
 
           <div className="assistant-thread">
             <div className="assistant-bubble assistant-bubble-bot">
-              <i className="fas fa-sparkles assistant-bubble-icon" />
+              <div className="assistant-bubble-avatar" aria-hidden="true">🙂</div>
               <p>{helperText}</p>
             </div>
 
@@ -149,7 +154,7 @@ export default function AssistantWidget() {
         aria-label="Yorum asistani ac"
       >
         <span className="assistant-launcher-icon">
-          <i className="fas fa-comment-dots" />
+          <span className="assistant-launcher-emoji">😊</span>
         </span>
         <span className="assistant-launcher-copy">
           <strong>Yardimci Bot</strong>
