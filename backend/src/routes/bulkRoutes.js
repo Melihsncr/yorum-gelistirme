@@ -3,7 +3,7 @@ import multer from 'multer';
 import { parse } from 'csv-parse/sync';
 import { analyzeComment, MODEL_NAMES } from '../services/llmService.js';
 import { saveLog } from '../config/db.js';
-import { fetchAmazonReviews } from '../services/amazonReviewService.js';
+import { fetchProductReviews } from '../services/productReviewService.js';
 
 const router = Router();
 
@@ -94,7 +94,7 @@ router.post('/bulk', upload.single('file'), async (req, res) => {
   res.json({ results, total: results.length });
 });
 
-router.post('/bulk/amazon', async (req, res) => {
+router.post('/bulk/product', async (req, res) => {
   try {
     const {
       productUrl = '',
@@ -104,25 +104,25 @@ router.post('/bulk/amazon', async (req, res) => {
     } = req.body || {};
 
     if (!productUrl.trim()) {
-      return res.status(400).json({ error: 'Amazon ürün linki zorunludur.' });
+      return res.status(400).json({ error: 'Ürün linki zorunludur.' });
     }
 
-    const amazonData = await fetchAmazonReviews(productUrl.trim(), {
+    const productData = await fetchProductReviews(productUrl.trim(), {
       maxReviews,
       maxPages: 4,
     });
 
-    const results = await analyzeComments(amazonData.reviews, tone, model);
+    const results = await analyzeComments(productData.reviews, tone, model);
 
     res.json({
       results,
       total: results.length,
-      source: 'amazon',
-      asin: amazonData.asin,
-      imported: amazonData.reviews.length,
+      source: productData.platform,
+      productRef: productData.productRef,
+      imported: productData.reviews.length,
     });
   } catch (error) {
-    res.status(500).json({ error: error.message || 'Amazon yorumları alınırken hata oluştu.' });
+    res.status(500).json({ error: error.message || 'Ürün yorumları alınırken hata oluştu.' });
   }
 });
 

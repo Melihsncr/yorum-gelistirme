@@ -9,7 +9,7 @@ const SENTIMENT_CLASS = {
 };
 
 export default function Bulk() {
-  const [importMode, setImportMode] = useState('amazon');
+  const [importMode, setImportMode] = useState('product');
   const [file, setFile] = useState(null);
   const [productUrl, setProductUrl] = useState('');
   const [model, setModel] = useState('gemini');
@@ -83,13 +83,13 @@ export default function Bulk() {
     }
   }
 
-  async function startAmazonImport() {
+  async function startProductImport() {
     if (!productUrl.trim()) return;
     beginRun();
     const timer = createProgressTimer();
 
     try {
-      const data = await api.bulkAmazon({
+      const data = await api.bulkProduct({
         productUrl: productUrl.trim(),
         model,
         tone,
@@ -124,9 +124,9 @@ export default function Bulk() {
       <div className="page-intro page-intro-compact">
         <div>
           <div className="page-eyebrow">Toplu Analiz Akışı</div>
-          <h1 className="page-intro-title">Amazon linki veya CSV ile yorum akışını başlat</h1>
+          <h1 className="page-intro-title">Ürün linki veya CSV ile yorum akışını başlat</h1>
           <p className="page-intro-sub">
-            Ürün linkini yapıştırıp yorumları otomatik çek veya `yorum` sütunlu CSV yükleyip tek seferde analiz et.
+            Amazon, Trendyol veya Hepsiburada ürün linkini yapıştırıp yorumları otomatik çek veya `yorum` sütunlu CSV yükleyip tek seferde analiz et.
           </p>
         </div>
       </div>
@@ -134,16 +134,16 @@ export default function Bulk() {
       <section className="flow-visual-panel bulk-visual">
         <div className="flow-visual-copy">
           <span className="flow-visual-kicker">Toplu görünüm</span>
-          <h2>Amazon yorumlarını tek tıkla içeri al, otomatik geliştir.</h2>
+          <h2>Ürün linkinden yorumları topla, otomatik geliştir.</h2>
           <p>
-            Amazon ürün linkinden gelen çoklu yorumları topla; duygu yoğunluğunu, kategori dağılımını
-            ve satıcıya özel cevap önerilerini tek turda üret.
+            Amazon, Trendyol ve Hepsiburada ürün linklerinden gelen çoklu yorumları topla; duygu yoğunluğunu,
+            kategori dağılımını ve satıcıya özel cevap önerilerini tek turda üret.
           </p>
         </div>
         <div className="bulk-visual-board">
           <div className="bulk-board-row"><span>Amazon</span><strong>30 yorum</strong></div>
-          <div className="bulk-board-row"><span>Duygu özeti</span><strong>LLM çıkarımı</strong></div>
-          <div className="bulk-board-row"><span>Satıcı önerisi</span><strong>Hazır aksiyon</strong></div>
+          <div className="bulk-board-row"><span>Trendyol</span><strong>Ürün linki</strong></div>
+          <div className="bulk-board-row"><span>Hepsiburada</span><strong>Satıcı aksiyonu</strong></div>
           <div className="bulk-board-chart">
             <i style={{ height: '72%' }} />
             <i style={{ height: '48%' }} />
@@ -154,7 +154,7 @@ export default function Bulk() {
 
       <div className="alert alert-info">
         <i className="fas fa-circle-info" />
-        <div>Amazon ürün linki ile otomatik çekim yapabilir veya CSV dosyanda <strong>yorum</strong> adında bir sütun kullanabilirsin. En fazla 500 satır işlenir.</div>
+        <div>Amazon, Trendyol veya Hepsiburada ürün linki ile otomatik çekim yapabilir veya CSV dosyanda <strong>yorum</strong> adında bir sütun kullanabilirsin. En fazla 500 satır işlenir.</div>
       </div>
 
       {error && <div className="alert alert-error"><i className="fas fa-circle-exclamation" /><span>{error}</span></div>}
@@ -164,25 +164,25 @@ export default function Bulk() {
         <div className="card-title card-title-space"><i className="fas fa-upload" /> Kaynak ve ayarlar</div>
 
         <div className="auth-mode-switch">
-          <button type="button" className={importMode === 'amazon' ? 'active' : ''} onClick={() => setImportMode('amazon')}>
-            Amazon linki
+          <button type="button" className={importMode === 'product' ? 'active' : ''} onClick={() => setImportMode('product')}>
+            Ürün linki
           </button>
           <button type="button" className={importMode === 'csv' ? 'active' : ''} onClick={() => setImportMode('csv')}>
             CSV yükle
           </button>
         </div>
 
-        {importMode === 'amazon' ? (
+        {importMode === 'product' ? (
           <div className="section-gap">
-            <label className="form-label">Amazon ürün linki</label>
+            <label className="form-label">Ürün linki</label>
             <input
               className="form-control"
-              placeholder="https://www.amazon.com.tr/dp/..."
+              placeholder="https://www.amazon.com.tr/... veya https://www.trendyol.com/... veya https://www.hepsiburada.com/..."
               value={productUrl}
               onChange={(event) => setProductUrl(event.target.value)}
             />
             <p className="compare-help">
-              Sistem linkten ürünü tanıyıp yorum sayfalarından ilk 30 yorumu toplamaya çalışır.
+              Sistem linkin hangi platforma ait olduğunu tanır ve ilk yorumları toplamaya çalışır. Korumalı sayfalarda sonuç değişebilir.
             </p>
           </div>
         ) : (
@@ -233,11 +233,11 @@ export default function Bulk() {
         <button
           className="btn btn-primary btn-lg btn-full"
           disabled={(importMode === 'csv' ? !file : !productUrl.trim()) || state === 'progress'}
-          onClick={importMode === 'csv' ? startBulkCsv : startAmazonImport}
+          onClick={importMode === 'csv' ? startBulkCsv : startProductImport}
         >
           {state === 'progress'
             ? <><i className="fas fa-spinner spin" /> İşleniyor...</>
-            : <><i className="fas fa-rocket" /> {importMode === 'csv' ? 'Toplu analizi başlat' : 'Amazon yorumlarını getir ve analiz et'}</>}
+            : <><i className="fas fa-rocket" /> {importMode === 'csv' ? 'Toplu analizi başlat' : 'Ürün yorumlarını getir ve analiz et'}</>}
         </button>
       </div>
 
