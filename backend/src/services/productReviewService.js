@@ -18,22 +18,49 @@ function stripHtml(text) {
     .trim();
 }
 
+function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+async function requestPage(url, referer, attempt = 1) {
+  try {
+    return await fetch(url, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0 Safari/537.36',
+        'Accept-Language': 'tr-TR,tr;q=0.9,en-US;q=0.8,en;q=0.7',
+        Accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+        Referer: referer || url,
+        'Cache-Control': 'no-cache',
+        Connection: 'keep-alive',
+      },
+    });
+  } catch (error) {
+    if (attempt >= 3) {
+      throw error;
+    }
+
+    await sleep(700 * attempt);
+    return requestPage(url, referer, attempt + 1);
+  }
+}
+
 async function fetchHtml(url, referer) {
-  const response = await fetch(url, {
-    headers: {
-      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0 Safari/537.36',
-      'Accept-Language': 'tr-TR,tr;q=0.9,en-US;q=0.8,en;q=0.7',
-      Accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-      Referer: referer || url,
-      'Cache-Control': 'no-cache',
-    },
-  });
+  const response = await requestPage(url, referer);
 
   if (!response.ok) {
     throw new Error(`Ürün sayfası alınamadı: ${response.status}`);
   }
 
   return response.text();
+}
+
+async function fetchHtmlResponse(url, referer) {
+  const response = await requestPage(url, referer);
+
+  return {
+    status: response.status,
+    html: await response.text(),
+  };
 }
 
 function dedupeTrimmed(values, maxReviews) {
@@ -114,8 +141,22 @@ function extractAmazonMeta(parsedUrl) {
 
 async function fetchAmazonReviews(parsedUrl, options) {
   const { asin, origin } = extractAmazonMeta(parsedUrl);
-  const maxPages = Math.min(Number(options.maxPages) || 3, 5);
   const maxReviews = Math.min(Number(options.maxReviews) || 30, 100);
+  const productPageHtml = await fetchHtml(parsedUrl.toString(), origin);
+  const productPageReviews = extractWithPatterns(
+    productPageHtml,
+    [
+      /data-hook="reviewRichContentContainer"[\s\S]*?<span>([\s\S]*?)<\/span>/gi,
+      /data-hook="reviewTextContainer"[\s\S]*?<span[^>]*>([\s\S]*?)<\/span>/gi,
+    ],
+    maxReviews,
+  );
+
+  if (productPageReviews.length) {
+    return { platform: 'amazon', productRef: asin, reviews: productPageReviews };
+  }
+
+  const maxPages = Math.min(Number(options.maxPages) || 3, 5);
   const collected = [];
   const seen = new Set();
 
@@ -124,11 +165,12 @@ async function fetchAmazonReviews(parsedUrl, options) {
     const html = await fetchHtml(url, origin);
     const pageReviews = extractWithPatterns(
       html,
-      [/data-hook="review-body"[\s\S]*?<span[^>]*>([\s\S]*?)<\/span>/gi],
+      [
+        /data-hook="reviewRichContentContainer"[\s\S]*?<span>([\s\S]*?)<\/span>/gi,
+        /data-hook="review-body"[\s\S]*?<span[^>]*>([\s\S]*?)<\/span>/gi,
+      ],
       maxReviews,
     );
-
-    if (!pageReviews.length) break;
 
     for (const review of pageReviews) {
       if (seen.has(review)) continue;
@@ -141,15 +183,20 @@ async function fetchAmazonReviews(parsedUrl, options) {
   }
 
   if (!collected.length) {
-    throw new Error('Amazon yorumları çekilemedi. Ürün sayfası korumalı olabilir veya yorumlar sunucuya kapalı olabilir.');
+    throw new Error('Amazon yorumları çekilemedi. Amazon sunucu tarafı isteği kısıtlıyor olabilir.');
   }
 
   return { platform: 'amazon', productRef: asin, reviews: collected };
 }
 
 async function fetchTrendyolReviews(parsedUrl, options) {
-  const html = await fetchHtml(parsedUrl.toString(), parsedUrl.origin);
+  const { status, html } = await fetchHtmlResponse(parsedUrl.toString(), parsedUrl.origin);
   const maxReviews = Math.min(Number(options.maxReviews) || 30, 100);
+
+  if (status === 403) {
+    throw new Error('Trendyol ürün sayfası sunucu tarafı istekleri engelliyor. Bu platformda doğrudan linkten otomatik çekim şu an koruma nedeniyle başarısız oluyor.');
+  }
+
   const reviews = extractWithPatterns(html, [
     /"comment":"([^"]+)"/gi,
     /"commentText":"([^"]+)"/gi,
@@ -172,10 +219,7 @@ async function fetchHepsiburadaReviews(parsedUrl, options) {
   const html = await fetchHtml(parsedUrl.toString(), parsedUrl.origin);
   const maxReviews = Math.min(Number(options.maxReviews) || 30, 100);
   const reviews = extractWithPatterns(html, [
-    /"reviewText":"([^"]+)"/gi,
-    /"comment":"([^"]+)"/gi,
-    /"content":"([^"]+)"/gi,
-    /data-test-id="review-content"[^>]*>([\s\S]*?)</gi,
+    /"reviewBody":"([^"]+)"/gi,
   ], maxReviews);
 
   if (!reviews.length) {
