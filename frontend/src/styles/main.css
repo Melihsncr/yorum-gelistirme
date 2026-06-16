@@ -3902,7 +3902,25 @@ body {
   }
 
   .topbar-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+  }
+
+  .topbar-link-btn,
+  .topbar-cta {
+    padding: 9px 12px;
+    font-size: 13px;
+    white-space: nowrap;
+  }
+
+  .topbar-user-pill {
     display: none;
+  }
+
+  .topbar-brand-name {
+    font-size: 15px;
   }
 
   .page {
