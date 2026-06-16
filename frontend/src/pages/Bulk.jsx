@@ -9,7 +9,9 @@ const SENTIMENT_CLASS = {
 };
 
 export default function Bulk() {
+  const [importMode, setImportMode] = useState('amazon');
   const [file, setFile] = useState(null);
+  const [productUrl, setProductUrl] = useState('');
   const [model, setModel] = useState('gemini');
   const [tone, setTone] = useState('Kibar');
   const [progress, setProgress] = useState(0);
@@ -26,44 +28,82 @@ export default function Bulk() {
     setError('');
   }
 
-  async function startBulk() {
-    if (!file) return;
+  function beginRun() {
     setState('progress');
     setResults([]);
     setProgress(0);
     setProgressLabel('Hazırlanıyor...');
+    setError('');
+  }
 
+  function createProgressTimer() {
     let fakeProgress = 0;
-    const timer = window.setInterval(() => {
+    return window.setInterval(() => {
       fakeProgress = Math.min(fakeProgress + Math.random() * 7, 88);
       setProgress(Math.round(fakeProgress));
       setProgressLabel('Yorumlar analiz ediliyor...');
     }, 300);
+  }
+
+  function finishSuccess(data, timer) {
+    window.clearInterval(timer);
+    setProgress(100);
+    setProgressLabel(`Tamamlandı. ${data.total} yorum analiz edildi ve kaydedildi.`);
+    setResults(data.results);
+    setState('done');
+  }
+
+  function finishError(message, timer) {
+    window.clearInterval(timer);
+    setError(message);
+    setState('idle');
+    setProgress(0);
+  }
+
+  async function startBulkCsv() {
+    if (!file) return;
+    beginRun();
+    const timer = createProgressTimer();
 
     try {
       const form = new FormData();
       form.append('file', file);
       form.append('model', model);
       form.append('tone', tone);
-      const data = await api.bulk(form);
-      window.clearInterval(timer);
 
+      const data = await api.bulk(form);
       if (data.error) {
-        setError(data.error);
-        setState('idle');
-        setProgress(0);
+        finishError(data.error, timer);
         return;
       }
 
-      setProgress(100);
-      setProgressLabel(`Tamamlandı. ${data.total} yorum analiz edildi ve kaydedildi.`);
-      setResults(data.results);
-      setState('done');
+      finishSuccess(data, timer);
     } catch (requestError) {
-      window.clearInterval(timer);
-      setError(requestError.message);
-      setState('idle');
-      setProgress(0);
+      finishError(requestError.message, timer);
+    }
+  }
+
+  async function startAmazonImport() {
+    if (!productUrl.trim()) return;
+    beginRun();
+    const timer = createProgressTimer();
+
+    try {
+      const data = await api.bulkAmazon({
+        productUrl: productUrl.trim(),
+        model,
+        tone,
+        maxReviews: 30,
+      });
+
+      if (data.error) {
+        finishError(data.error, timer);
+        return;
+      }
+
+      finishSuccess(data, timer);
+    } catch (requestError) {
+      finishError(requestError.message, timer);
     }
   }
 
@@ -84,9 +124,9 @@ export default function Bulk() {
       <div className="page-intro page-intro-compact">
         <div>
           <div className="page-eyebrow">Toplu Analiz Akışı</div>
-          <h1 className="page-intro-title">CSV yükle, yorumları toplu işle ve kaydet</h1>
+          <h1 className="page-intro-title">Amazon linki veya CSV ile yorum akışını başlat</h1>
           <p className="page-intro-sub">
-            `yorum` sütunundaki verileri tek seferde işle, duygu dağılımını gör ve sonuçları indir.
+            Ürün linkini yapıştırıp yorumları otomatik çek veya `yorum` sütunlu CSV yükleyip tek seferde analiz et.
           </p>
         </div>
       </div>
@@ -94,16 +134,16 @@ export default function Bulk() {
       <section className="flow-visual-panel bulk-visual">
         <div className="flow-visual-copy">
           <span className="flow-visual-kicker">Toplu görünüm</span>
-          <h2>Platformlardan gelen akışı tek tabloda toparla.</h2>
+          <h2>Amazon yorumlarını tek tıkla içeri al, otomatik geliştir.</h2>
           <p>
-            Trendyol, Amazon ve Hepsiburada yorumlarını aynı dosyada birleştir; yoğunluğu, duygu
-            dağılımını ve cevap üretim sürecini tek turda tamamla.
+            Amazon ürün linkinden gelen çoklu yorumları topla; duygu yoğunluğunu, kategori dağılımını
+            ve satıcıya özel cevap önerilerini tek turda üret.
           </p>
         </div>
         <div className="bulk-visual-board">
-          <div className="bulk-board-row"><span>Trendyol</span><strong>214 yorum</strong></div>
-          <div className="bulk-board-row"><span>Amazon</span><strong>126 yorum</strong></div>
-          <div className="bulk-board-row"><span>Hepsiburada</span><strong>88 yorum</strong></div>
+          <div className="bulk-board-row"><span>Amazon</span><strong>30 yorum</strong></div>
+          <div className="bulk-board-row"><span>Duygu özeti</span><strong>LLM çıkarımı</strong></div>
+          <div className="bulk-board-row"><span>Satıcı önerisi</span><strong>Hazır aksiyon</strong></div>
           <div className="bulk-board-chart">
             <i style={{ height: '72%' }} />
             <i style={{ height: '48%' }} />
@@ -114,28 +154,61 @@ export default function Bulk() {
 
       <div className="alert alert-info">
         <i className="fas fa-circle-info" />
-        <div>CSV dosyanda <strong>yorum</strong> adında bir sütun olmalı. En fazla 500 satır işlenir.</div>
+        <div>Amazon ürün linki ile otomatik çekim yapabilir veya CSV dosyanda <strong>yorum</strong> adında bir sütun kullanabilirsin. En fazla 500 satır işlenir.</div>
       </div>
 
       {error && <div className="alert alert-error"><i className="fas fa-circle-exclamation" /><span>{error}</span></div>}
 
       <div className="card work-card">
         <div className="section-kicker">Import</div>
-        <div className="card-title card-title-space"><i className="fas fa-upload" /> Dosya ve ayarlar</div>
-        <div
-          className={`upload-zone${over ? ' over' : ''}`}
-          onClick={() => inputRef.current?.click()}
-          onDragOver={(event) => { event.preventDefault(); setOver(true); }}
-          onDragLeave={() => setOver(false)}
-          onDrop={(event) => { event.preventDefault(); setOver(false); pickFile(event.dataTransfer.files[0]); }}
-        >
-          <div className="icon"><i className="fas fa-cloud-arrow-up" /></div>
-          <h3>CSV dosyasını sürükle veya tıkla</h3>
-          <p>UTF-8 önerilir - sadece .csv uzantısı kabul edilir</p>
-          {file && <div className="upload-name">{file.name}</div>}
+        <div className="card-title card-title-space"><i className="fas fa-upload" /> Kaynak ve ayarlar</div>
+
+        <div className="auth-mode-switch">
+          <button type="button" className={importMode === 'amazon' ? 'active' : ''} onClick={() => setImportMode('amazon')}>
+            Amazon linki
+          </button>
+          <button type="button" className={importMode === 'csv' ? 'active' : ''} onClick={() => setImportMode('csv')}>
+            CSV yükle
+          </button>
         </div>
 
-        <input ref={inputRef} type="file" accept=".csv" style={{ display: 'none' }} onChange={(event) => pickFile(event.target.files[0])} />
+        {importMode === 'amazon' ? (
+          <div className="section-gap">
+            <label className="form-label">Amazon ürün linki</label>
+            <input
+              className="form-control"
+              placeholder="https://www.amazon.com.tr/dp/..."
+              value={productUrl}
+              onChange={(event) => setProductUrl(event.target.value)}
+            />
+            <p className="compare-help">
+              Sistem linkten ürünü tanıyıp yorum sayfalarından ilk 30 yorumu toplamaya çalışır.
+            </p>
+          </div>
+        ) : (
+          <>
+            <div
+              className={`upload-zone${over ? ' over' : ''}`}
+              onClick={() => inputRef.current?.click()}
+              onDragOver={(event) => { event.preventDefault(); setOver(true); }}
+              onDragLeave={() => setOver(false)}
+              onDrop={(event) => { event.preventDefault(); setOver(false); pickFile(event.dataTransfer.files[0]); }}
+            >
+              <div className="icon"><i className="fas fa-cloud-arrow-up" /></div>
+              <h3>CSV dosyasını sürükle veya tıkla</h3>
+              <p>UTF-8 önerilir - sadece .csv uzantısı kabul edilir</p>
+              {file && <div className="upload-name">{file.name}</div>}
+            </div>
+
+            <input
+              ref={inputRef}
+              type="file"
+              accept=".csv"
+              style={{ display: 'none' }}
+              onChange={(event) => pickFile(event.target.files[0])}
+            />
+          </>
+        )}
 
         <div className="form-row section-gap">
           <div className="form-group">
@@ -157,8 +230,14 @@ export default function Bulk() {
           </div>
         </div>
 
-        <button className="btn btn-primary btn-lg btn-full" disabled={!file || state === 'progress'} onClick={startBulk}>
-          {state === 'progress' ? <><i className="fas fa-spinner spin" /> İşleniyor...</> : <><i className="fas fa-rocket" /> Toplu analizi başlat</>}
+        <button
+          className="btn btn-primary btn-lg btn-full"
+          disabled={(importMode === 'csv' ? !file : !productUrl.trim()) || state === 'progress'}
+          onClick={importMode === 'csv' ? startBulkCsv : startAmazonImport}
+        >
+          {state === 'progress'
+            ? <><i className="fas fa-spinner spin" /> İşleniyor...</>
+            : <><i className="fas fa-rocket" /> {importMode === 'csv' ? 'Toplu analizi başlat' : 'Amazon yorumlarını getir ve analiz et'}</>}
         </button>
       </div>
 

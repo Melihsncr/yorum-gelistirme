@@ -37,6 +37,7 @@ export const api = {
   save: (data) => request('POST', '/save', data),
   reset: () => request('POST', '/reset'),
   bulk: (form) => request('POST', '/bulk', form, true),
+  bulkAmazon: (data) => request('POST', '/bulk/amazon', data),
   createCheckout: (data) => request('POST', '/payments/checkout', data),
   signup: (data) => request('POST', '/auth/signup', data),
   login: (data) => request('POST', '/auth/login', data),
