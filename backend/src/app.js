@@ -11,9 +11,37 @@ import authRoutes from './routes/authRoutes.js';
 
 const app = express();
 const PORT = process.env.PORT || 5000;
+const DEFAULT_ALLOWED_ORIGINS = [
+  'http://localhost:5173',
+  'https://yorum-gelistirme.vercel.app',
+  'https://www.yorumgelistirme.it.com',
+  'https://yorumgelistirme.it.com',
+];
+
+function getAllowedOrigins() {
+  const envOrigins = [
+    process.env.FRONTEND_URL,
+    process.env.FRONTEND_URLS,
+  ]
+    .filter(Boolean)
+    .flatMap((value) => value.split(','))
+    .map((value) => value.trim().replace(/\/$/, ''))
+    .filter(Boolean);
+
+  return [...new Set([...DEFAULT_ALLOWED_ORIGINS, ...envOrigins])];
+}
+
+const allowedOrigins = getAllowedOrigins();
 
 app.use(cors({
-  origin: process.env.FRONTEND_URL || '*',
+  origin(origin, callback) {
+    if (!origin || allowedOrigins.includes(origin.replace(/\/$/, ''))) {
+      callback(null, true);
+      return;
+    }
+
+    callback(new Error(`CORS engeli: ${origin}`));
+  },
   methods: ['GET', 'POST', 'DELETE'],
   allowedHeaders: ['Content-Type', 'Authorization'],
 }));
@@ -37,10 +65,10 @@ app.use((err, _req, res, _next) => {
 initDb()
   .then(() => {
     app.listen(PORT, () => {
-      console.log(`✅ Sunucu calisiyor: http://localhost:${PORT}`);
+      console.log(` Sunucu calisiyor: http://localhost:${PORT}`);
     });
   })
   .catch((err) => {
-    console.error('❌ Veritabani baslatilamadi:', err.message);
+    console.error(' Veritabani baslatilamadi:', err.message);
     process.exit(1);
   });
