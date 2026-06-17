@@ -56,7 +56,15 @@ export function detectPlatform(productUrl) {
     return { platform: 'hepsiburada', parsedUrl };
   }
 
-  throw new Error('Şimdilik sadece Amazon, Trendyol ve Hepsiburada linkleri destekleniyor.');
+  if (host.includes('n11.')) {
+    return { platform: 'n11', parsedUrl };
+  }
+
+  if (host.includes('ciceksepeti.')) {
+    return { platform: 'ciceksepeti', parsedUrl };
+  }
+
+  throw new Error('Şimdilik Amazon, Trendyol, Hepsiburada, n11 ve Çiçeksepeti linkleri tanınıyor.');
 }
 
 export function extractAmazonMeta(parsedUrl) {

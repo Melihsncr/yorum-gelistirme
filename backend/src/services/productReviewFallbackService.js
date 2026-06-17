@@ -181,5 +181,17 @@ export async function fetchProductReviewsFallback(productUrl, options = {}) {
     return fetchTrendyolReviews(parsedUrl, options);
   }
 
+  if (platform === 'hepsiburada') {
+    return fetchHepsiburadaReviews(parsedUrl, options);
+  }
+
+  if (platform === 'n11') {
+    throw new Error('n11 bu sunucu ortamında Cloudflare koruması gösteriyor. Linkten otomatik çekim şu an engelleniyor.');
+  }
+
+  if (platform === 'ciceksepeti') {
+    throw new Error('Çiçeksepeti bu sunucu ortamında korumalı hata sayfası döndürüyor. Linkten otomatik çekim şu an engelleniyor.');
+  }
+
   return fetchHepsiburadaReviews(parsedUrl, options);
 }

@@ -12,6 +12,7 @@ export default function Bulk() {
   const [importMode, setImportMode] = useState('product');
   const [file, setFile] = useState(null);
   const [productUrl, setProductUrl] = useState('');
+  const [maxReviews, setMaxReviews] = useState(30);
   const [model, setModel] = useState('gemini');
   const [tone, setTone] = useState('Kibar');
   const [progress, setProgress] = useState(0);
@@ -101,7 +102,7 @@ export default function Bulk() {
         productUrl: productUrl.trim(),
         model,
         tone,
-        maxReviews: 30,
+        maxReviews,
       });
 
       if (data.error) {
@@ -149,9 +150,10 @@ export default function Bulk() {
           </p>
         </div>
         <div className="bulk-visual-board">
-          <div className="bulk-board-row"><span>Amazon</span><strong>Canlı ürün linki</strong></div>
-          <div className="bulk-board-row"><span>Trendyol</span><strong>Beta / koruma sınırlı</strong></div>
-          <div className="bulk-board-row"><span>Hepsiburada</span><strong>Beta / ağ kararsız</strong></div>
+          <div className="bulk-board-row"><span>Amazon</span><strong>Sınırlı canlı çekim</strong></div>
+          <div className="bulk-board-row"><span>Trendyol</span><strong>Beta / challenge</strong></div>
+          <div className="bulk-board-row"><span>Hepsiburada</span><strong>Beta / güvenlik duvarı</strong></div>
+          <div className="bulk-board-row"><span>n11 / Çiçeksepeti</span><strong>Tanınıyor / korumalı</strong></div>
           <div className="bulk-board-chart">
             <i style={{ height: '72%' }} />
             <i style={{ height: '48%' }} />
@@ -162,7 +164,7 @@ export default function Bulk() {
 
       <div className="alert alert-info">
         <i className="fas fa-circle-info" />
-        <div>Amazon ürün linki canlı desteklenir. Trendyol ve Hepsiburada ürün linki modülü beta durumundadır. Tüm platformlar için CSV dosyanda <strong>yorum</strong> adında bir sütun kullanabilirsin. En fazla 500 satır işlenir.</div>
+        <div>Amazon, Trendyol, Hepsiburada, n11 ve Çiçeksepeti linkleri tanınır. Sistem önce tarayıcı destekli çekimi dener, koruma varsa fallback veya açıklayıcı hata verir. Tüm platformlar için CSV dosyanda <strong>yorum</strong> adında bir sütun kullanabilirsin. En fazla 500 satır işlenir.</div>
       </div>
 
       <div className="alert alert-success">
@@ -195,7 +197,7 @@ export default function Bulk() {
               onChange={(event) => setProductUrl(event.target.value)}
             />
             <p className="compare-help">
-              Amazon ürün linklerinde otomatik çekim canlı çalışır. Trendyol ve Hepsiburada tarafı beta durumundadır; koruma veya ağ kaynaklı hata verebilir.
+              Amazon’da sınırlı otomatik çekim yapılır. Trendyol, Hepsiburada, n11 ve Çiçeksepeti tarafında koruma duvarları nedeniyle sonuç platforma göre değişebilir.
             </p>
           </div>
         ) : (
@@ -224,6 +226,15 @@ export default function Bulk() {
         )}
 
         <div className="form-row section-gap">
+          <div className="form-group">
+            <label className="form-label">Hedef yorum sayısı</label>
+            <select className="form-control" value={maxReviews} onChange={(event) => setMaxReviews(Number(event.target.value))}>
+              <option value={20}>20 yorum</option>
+              <option value={30}>30 yorum</option>
+              <option value={50}>50 yorum</option>
+              <option value={100}>100 yorum</option>
+            </select>
+          </div>
           <div className="form-group">
             <label className="form-label">AI modeli</label>
             <select className="form-control" value={model} onChange={(event) => setModel(event.target.value)}>
@@ -281,7 +292,10 @@ export default function Bulk() {
           {runMeta?.scraper === 'http-fallback' && (
             <div className="alert alert-info" style={{ marginBottom: 16 }}>
               <i className="fas fa-circle-info" />
-              <span>Tarayıcı destekli çekim bu istekte başarısız oldu, görünebilir yorumlar fallback ile alındı. Kaynak: {runMeta.source} | İçe aktarılan yorum: {runMeta.imported}</span>
+              <span>
+                Tarayıcı destekli çekim bu istekte başarısız oldu, görünebilir yorumlar fallback ile alındı. Kaynak: {runMeta.source} | İçe aktarılan yorum: {runMeta.imported}
+                {runMeta.scraperWarning ? ` | Neden: ${runMeta.scraperWarning}` : ''}
+              </span>
             </div>
           )}
 

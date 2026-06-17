@@ -55,6 +55,7 @@ async function dismissCommonPopups(page) {
     'button:has-text("Kabul ediyorum")',
     'button:has-text("Accept")',
     'button#sp-cc-accept',
+    'input#sp-cc-accept',
     '[id*="onetrust-accept"]',
   ];
 
@@ -91,15 +92,25 @@ async function extractTextList(page, selectors, maxReviews) {
 async function fetchAmazonReviews(parsedUrl, options) {
   const { asin, origin } = extractAmazonMeta(parsedUrl);
   const maxReviews = Math.min(Number(options.maxReviews) || 30, 100);
-  const maxPages = Math.min(Number(options.maxPages) || 4, 6);
+  const maxPages = Math.min(Number(options.maxPages) || 4, 8);
 
   return withBrowser(async (page) => {
     const reviewUrl = `${origin}/product-reviews/${asin}/ref=cm_cr_dp_d_show_all_btm?ie=UTF8&reviewerType=all_reviews`;
     const collected = [];
     const seen = new Set();
 
+    await preparePage(page, parsedUrl.toString());
+    await dismissCommonPopups(page);
+
+    const pageHtml = await page.content();
+    const showAllMatch = pageHtml.match(new RegExp(`href=\\\\?"([^\\\\"]*product-reviews\\/${asin}[^\\\\"]*(?:show_all_top|show_all_btm)[^\\\\"]*)\\\\?"`, 'i'));
+    const preferredReviewUrl = showAllMatch?.[1]
+      ? `${origin}${showAllMatch[1].replace(/&amp;/g, '&')}`
+      : reviewUrl;
+
     for (let pageNumber = 1; pageNumber <= maxPages; pageNumber += 1) {
-      const pageUrl = `${reviewUrl}&pageNumber=${pageNumber}`;
+      const separator = preferredReviewUrl.includes('?') ? '&' : '?';
+      const pageUrl = `${preferredReviewUrl}${separator}pageNumber=${pageNumber}`;
       await preparePage(page, pageUrl);
       await dismissCommonPopups(page);
 
@@ -122,9 +133,9 @@ async function fetchAmazonReviews(parsedUrl, options) {
         }
       }
 
-      const blocked = await page.locator('text=/robot|captcha|giriş yap|sign in/i').first().isVisible({ timeout: 500 }).catch(() => false);
+      const blocked = await page.locator('text=/robot|captcha|giriş yap|sign in|oturum aç/i').first().isVisible({ timeout: 500 }).catch(() => false);
       if (blocked && !collected.length) {
-        throw new Error('Amazon yorum sayfası koruma gösterdi. Playwright ile de tam erişim sağlanamadı.');
+        throw new Error('Amazon yorum sayfası oturum açma veya koruma duvarı gösterdi. Bu ortamda tüm yorumlara erişim sağlanamadı.');
       }
     }
 
@@ -216,6 +227,14 @@ async function fetchHepsiburadaReviews(parsedUrl, options) {
   });
 }
 
+async function fetchN11Reviews() {
+  throw new Error('n11 bu sunucu ortamında Cloudflare koruması gösteriyor. Playwright ile de ürün sayfasına stabil erişim sağlanamadı.');
+}
+
+async function fetchCiceksepetiReviews() {
+  throw new Error('Çiçeksepeti koruma sayfası döndürüyor. Playwright ile ürün yorumları bu ortamda alınamadı.');
+}
+
 export async function fetchProductReviewsWithPlaywright(productUrl, options = {}) {
   const { platform, parsedUrl } = detectPlatform(productUrl);
 
@@ -227,5 +246,13 @@ export async function fetchProductReviewsWithPlaywright(productUrl, options = {}
     return fetchTrendyolReviews(parsedUrl, options);
   }
 
-  return fetchHepsiburadaReviews(parsedUrl, options);
+  if (platform === 'hepsiburada') {
+    return fetchHepsiburadaReviews(parsedUrl, options);
+  }
+
+  if (platform === 'n11') {
+    return fetchN11Reviews(parsedUrl, options);
+  }
+
+  return fetchCiceksepetiReviews(parsedUrl, options);
 }
