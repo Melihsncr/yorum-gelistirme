@@ -5,45 +5,56 @@ const DEFAULT_ACTIONS = [
   {
     key: 'analyze',
     title: 'Tek yorum analizi',
-    description: 'Bir yorumu aninda inceleyip cevap onerisi uret.',
+    description: 'Bir yorumu anında inceleyip cevap önerisi üret.',
     path: '/analyze',
     icon: 'fa-comment-dots',
-    reply: 'Tek yorum akisi en hizli baslangic. Seni analiz ekranina goturuyorum.',
+    reply: 'Tek yorum akışı en hızlı başlangıç. Seni analiz ekranına götürüyorum.',
   },
   {
     key: 'bulk',
     title: 'Toplu CSV analizi',
-    description: 'Yorum dosyasini yukleyip toplu islem baslat.',
+    description: 'Yorum dosyasını yükleyip toplu işlem başlat.',
     path: '/bulk',
     icon: 'fa-file-csv',
-    reply: 'Toplu akis secildi. CSV yukleme ekranina geciyoruz.',
+    reply: 'Toplu akış seçildi. CSV yükleme ekranına geçiyoruz.',
   },
   {
     key: 'compare',
-    title: 'Model karsilastirma',
-    description: 'Gemini, Llama ve OpenRouter ciktilarini yan yana gor.',
+    title: 'Model karşılaştırma',
+    description: 'Gemini, Llama ve OpenRouter çıktılarını yan yana gör.',
     path: '/compare',
     icon: 'fa-layer-group',
-    reply: 'Farkli model cevaplarini karsilastirmak icin uygun ekrana gidiyoruz.',
+    reply: 'Farklı model cevaplarını karşılaştırmak için uygun ekrana gidiyoruz.',
   },
   {
     key: 'pricing',
-    title: 'Planlari incele',
-    description: 'Free, Pro ve Pro Max seceneklerini gor.',
+    title: 'Planları incele',
+    description: 'Free, Pro ve Pro Max seçeneklerini gör.',
     path: '/pricing',
     icon: 'fa-credit-card',
-    reply: 'Planlari birlikte kontrol edelim. Ucretlendirme sayfasini aciyorum.',
+    reply: 'Planları birlikte kontrol edelim. Ücretlendirme sayfasını açıyorum.',
   },
 ];
 
 const PAGE_HINTS = {
-  '/': 'Tekli islem mi toplu islem mi yapmak istiyorsun? Sana uygun akisi hemen acabilirim.',
-  '/analyze': 'Burada tek yorumu hizlica analiz edebilirsin. Istersen toplu akisa da gecirebilirim.',
-  '/bulk': 'CSV dosyan hazirsa toplu analiz burada baslar. Ornek dosya yapisini da hatirlatabilirim.',
-  '/compare': 'Ayni yorumu birden fazla modelle karsilastirmak icin dogru yerdesin.',
-  '/history': 'Eski analizleri inceleyebilir, sonra tekli veya toplu akisa donebilirsin.',
-  '/pricing': 'Plan seciminde takilirsan ihtiyacina gore yonlendirebilirim.',
+  '/': 'Tekli işlem mi toplu işlem mi yapmak istiyorsun? Sana uygun akışı hemen açabilirim.',
+  '/analyze': 'Burada tek yorumu hızlıca analiz edebilirsin. İstersen toplu akışa da geçirebilirim.',
+  '/bulk': 'CSV dosyan hazırsa toplu analiz burada başlar. Örnek dosya yapısını da hatırlatabilirim.',
+  '/compare': 'Aynı yorumu birden fazla modelle karşılaştırmak için doğru yerdesin.',
+  '/history': 'Eski analizleri inceleyebilir, sonra tekli veya toplu akışa dönebilirsin.',
+  '/pricing': 'Plan seçiminde takılırsan ihtiyacına göre yönlendirebilirim.',
 };
+
+function BotAvatar({ compact = false }) {
+  return (
+    <div className={`assistant-bot-face${compact ? ' compact' : ''}`} aria-hidden="true">
+      <span className="assistant-bot-eye left" />
+      <span className="assistant-bot-eye right" />
+      <span className="assistant-bot-smile" />
+      {!compact && <span className="assistant-bot-glow" />}
+    </div>
+  );
+}
 
 export default function AssistantWidget() {
   const navigate = useNavigate();
@@ -85,22 +96,22 @@ export default function AssistantWidget() {
   return (
     <div className={`assistant-widget${open ? ' open' : ''}`}>
       {open && (
-        <section className="assistant-panel" aria-label="Yorum asistani">
+        <section className="assistant-panel" aria-label="Yorum asistanı">
           <div className="assistant-panel-header">
             <div className="assistant-header-copy">
               <div className="assistant-avatar" aria-hidden="true">
-                <span className="assistant-avatar-face">😊</span>
+                <BotAvatar />
               </div>
               <div>
-              <span className="assistant-kicker">Akilli yardimci</span>
-              <strong>Yorum Asistani</strong>
+                <span className="assistant-kicker">Akıllı yardımcı</span>
+                <strong>Yorum Asistanı</strong>
               </div>
             </div>
             <button
               type="button"
               className="assistant-close-btn"
               onClick={() => setOpen(false)}
-              aria-label="Asistani kapat"
+              aria-label="Asistanı kapat"
             >
               <i className="fas fa-xmark" />
             </button>
@@ -108,7 +119,9 @@ export default function AssistantWidget() {
 
           <div className="assistant-thread">
             <div className="assistant-bubble assistant-bubble-bot">
-              <div className="assistant-bubble-avatar" aria-hidden="true">🙂</div>
+              <div className="assistant-bubble-avatar" aria-hidden="true">
+                <BotAvatar compact />
+              </div>
               <p>{helperText}</p>
             </div>
 
@@ -142,7 +155,7 @@ export default function AssistantWidget() {
           </div>
 
           <div className="assistant-footer-note">
-            Istersen once tek yorumla baslayip sonra toplu akisa gecebilirsin.
+            İstersen önce tek yorumla başlayıp sonra toplu akışa geçebilirsin.
           </div>
         </section>
       )}
@@ -151,13 +164,13 @@ export default function AssistantWidget() {
         type="button"
         className="assistant-launcher"
         onClick={() => setOpen((value) => !value)}
-        aria-label="Yorum asistani ac"
+        aria-label="Yorum asistanı aç"
       >
         <span className="assistant-launcher-icon">
-          <span className="assistant-launcher-emoji">😊</span>
+          <BotAvatar compact />
         </span>
         <span className="assistant-launcher-copy">
-          <strong>Yardimci Bot</strong>
+          <strong>Yardımcı Bot</strong>
           <small>Ne yapmak istiyorsun?</small>
         </span>
       </button>

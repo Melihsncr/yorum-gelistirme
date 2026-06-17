@@ -1,4 +1,5 @@
 import { useRef, useState } from 'react';
+import { Link, useOutletContext } from 'react-router-dom';
 import { api } from '../api/client.js';
 
 const SENTIMENT_CLASS = {
@@ -9,6 +10,7 @@ const SENTIMENT_CLASS = {
 };
 
 export default function Bulk() {
+  const { user } = useOutletContext();
   const [importMode, setImportMode] = useState('product');
   const [file, setFile] = useState(null);
   const [productUrl, setProductUrl] = useState('');
@@ -23,6 +25,7 @@ export default function Bulk() {
   const [error, setError] = useState('');
   const [over, setOver] = useState(false);
   const inputRef = useRef(null);
+  const requiresAuth = !user;
 
   function pickFile(selectedFile) {
     if (!selectedFile || !selectedFile.name.endsWith('.csv')) return;
@@ -70,6 +73,11 @@ export default function Bulk() {
   }
 
   async function startBulkCsv() {
+    if (requiresAuth) {
+      setError('Analiz yapmak için önce giriş yapmalısın.');
+      return;
+    }
+
     if (!file) return;
     beginRun();
     const timer = createProgressTimer();
@@ -93,6 +101,11 @@ export default function Bulk() {
   }
 
   async function startProductImport() {
+    if (requiresAuth) {
+      setError('Analiz yapmak için önce giriş yapmalısın.');
+      return;
+    }
+
     if (!productUrl.trim()) return;
     beginRun();
     const timer = createProgressTimer();
@@ -119,9 +132,18 @@ export default function Bulk() {
   function downloadCsv() {
     if (!results.length) return;
     const keys = Object.keys(results[0]);
-    const csv = ['\uFEFF' + keys.join(','), ...results.map((row) => keys.map((key) => `"${String(row[key]).replace(/"/g, '""')}"`).join(','))].join('\n');
+    const csv = [
+      '\uFEFF' + keys.join(','),
+      ...results.map((row) =>
+        keys.map((key) => `"${String(row[key]).replace(/"/g, '""')}"`).join(','),
+      ),
+    ].join('\n');
+
     const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }));
-    Object.assign(document.createElement('a'), { href: url, download: 'toplu_analiz.csv' }).click();
+    Object.assign(document.createElement('a'), {
+      href: url,
+      download: 'toplu_analiz.csv',
+    }).click();
   }
 
   const positiveCount = results.filter((row) => row.duygu === 'Pozitif').length;
@@ -135,7 +157,8 @@ export default function Bulk() {
           <div className="page-eyebrow">Toplu Analiz Akışı</div>
           <h1 className="page-intro-title">Ürün linki veya CSV ile yorum akışını başlat</h1>
           <p className="page-intro-sub">
-            Amazon ürün linkinden yorumları otomatik çek; CSV yükleyerek tüm platform yorumlarını tek seferde analiz et.
+            Amazon ürün linkinden yorumları otomatik çek; CSV yükleyerek tüm platform
+            yorumlarını tek seferde analiz et.
           </p>
         </div>
       </div>
@@ -153,7 +176,7 @@ export default function Bulk() {
           <div className="bulk-board-row"><span>Amazon</span><strong>Sınırlı canlı çekim</strong></div>
           <div className="bulk-board-row"><span>Trendyol</span><strong>Beta / challenge</strong></div>
           <div className="bulk-board-row"><span>Hepsiburada</span><strong>Beta / güvenlik duvarı</strong></div>
-          <div className="bulk-board-row"><span>n11 / Çiçeksepeti</span><strong>Tanınıyor / korumalı</strong></div>
+          <div className="bulk-board-row"><span>n11 / Çiçeksepeti</span><strong>Tanınır / korumalı</strong></div>
           <div className="bulk-board-chart">
             <i style={{ height: '72%' }} />
             <i style={{ height: '48%' }} />
@@ -164,15 +187,43 @@ export default function Bulk() {
 
       <div className="alert alert-info">
         <i className="fas fa-circle-info" />
-        <div>Amazon, Trendyol, Hepsiburada, n11 ve Çiçeksepeti linkleri tanınır. Sistem önce tarayıcı destekli çekimi dener, koruma varsa fallback veya açıklayıcı hata verir. Tüm platformlar için CSV dosyanda <strong>yorum</strong> adında bir sütun kullanabilirsin. En fazla 500 satır işlenir.</div>
+        <div>
+          Amazon, Trendyol, Hepsiburada, n11 ve Çiçeksepeti linkleri tanınır.
+          Sistem önce tarayıcı destekli çekimi dener, koruma varsa fallback veya açıklayıcı hata verir.
+          Tüm platformlar için CSV dosyanda <strong>yorum</strong> adında bir sütun kullanabilirsin.
+          En fazla 500 satır işlenir.
+        </div>
       </div>
 
       <div className="alert alert-success">
         <i className="fas fa-bolt" />
-        <div><strong>Önerilen demo akışı:</strong> Amazon ürün linki ile otomatik yorum çekimi yap, ardından sonuçları Gemini, Llama ve OpenRouter ile geliştir.</div>
+        <div>
+          <strong>Önerilen demo akışı:</strong> Amazon ürün linki ile otomatik yorum çekimi yap,
+          ardından sonuçları Gemini, Llama ve OpenRouter ile geliştir.
+        </div>
       </div>
 
-      {error && <div className="alert alert-error"><i className="fas fa-circle-exclamation" /><span>{error}</span></div>}
+      {requiresAuth && (
+        <div className="alert alert-info">
+          <i className="fas fa-lock" />
+          <div>
+            Analiz başlatmak için önce giriş yap veya kayıt ol.
+            {' '}
+            <Link to="/auth?mode=login" className="inline-alert-link">Giriş yap</Link>
+            {' '}
+            veya
+            {' '}
+            <Link to="/auth?mode=signup" className="inline-alert-link">kayıt ol</Link>.
+          </div>
+        </div>
+      )}
+
+      {error && (
+        <div className="alert alert-error">
+          <i className="fas fa-circle-exclamation" />
+          <span>{error}</span>
+        </div>
+      )}
 
       <div className="card work-card">
         <div className="section-kicker">Import</div>
@@ -194,24 +245,36 @@ export default function Bulk() {
               className="form-control"
               placeholder="https://www.amazon.com.tr/... önerilen canlı akış"
               value={productUrl}
+              disabled={state === 'progress'}
               onChange={(event) => setProductUrl(event.target.value)}
             />
             <p className="compare-help">
-              Amazon’da sınırlı otomatik çekim yapılır. Trendyol, Hepsiburada, n11 ve Çiçeksepeti tarafında koruma duvarları nedeniyle sonuç platforma göre değişebilir.
+              Amazon&apos;da sınırlı otomatik çekim yapılır. Trendyol, Hepsiburada, n11 ve Çiçeksepeti tarafında
+              koruma duvarları nedeniyle sonuç platforma göre değişebilir.
             </p>
           </div>
         ) : (
           <>
             <div
               className={`upload-zone${over ? ' over' : ''}`}
-              onClick={() => inputRef.current?.click()}
-              onDragOver={(event) => { event.preventDefault(); setOver(true); }}
+              onClick={() => {
+                if (state === 'progress') return;
+                inputRef.current?.click();
+              }}
+              onDragOver={(event) => {
+                event.preventDefault();
+                setOver(true);
+              }}
               onDragLeave={() => setOver(false)}
-              onDrop={(event) => { event.preventDefault(); setOver(false); pickFile(event.dataTransfer.files[0]); }}
+              onDrop={(event) => {
+                event.preventDefault();
+                setOver(false);
+                pickFile(event.dataTransfer.files[0]);
+              }}
             >
               <div className="icon"><i className="fas fa-cloud-arrow-up" /></div>
               <h3>CSV dosyasını sürükle veya tıkla</h3>
-              <p>UTF-8 önerilir - sadece .csv uzantısı kabul edilir</p>
+              <p>UTF-8 önerilir, sadece .csv uzantısı kabul edilir</p>
               {file && <div className="upload-name">{file.name}</div>}
             </div>
 
@@ -219,6 +282,7 @@ export default function Bulk() {
               ref={inputRef}
               type="file"
               accept=".csv"
+              disabled={state === 'progress'}
               style={{ display: 'none' }}
               onChange={(event) => pickFile(event.target.files[0])}
             />
@@ -228,7 +292,7 @@ export default function Bulk() {
         <div className="form-row section-gap">
           <div className="form-group">
             <label className="form-label">Hedef yorum sayısı</label>
-            <select className="form-control" value={maxReviews} onChange={(event) => setMaxReviews(Number(event.target.value))}>
+            <select className="form-control" value={maxReviews} disabled={state === 'progress'} onChange={(event) => setMaxReviews(Number(event.target.value))}>
               <option value={20}>20 yorum</option>
               <option value={30}>30 yorum</option>
               <option value={50}>50 yorum</option>
@@ -237,7 +301,7 @@ export default function Bulk() {
           </div>
           <div className="form-group">
             <label className="form-label">AI modeli</label>
-            <select className="form-control" value={model} onChange={(event) => setModel(event.target.value)}>
+            <select className="form-control" value={model} disabled={state === 'progress'} onChange={(event) => setModel(event.target.value)}>
               <option value="gemini">Google Gemini 2.5</option>
               <option value="llama">Groq Llama 3.3</option>
               <option value="openrouter">OpenRouter Free</option>
@@ -245,7 +309,7 @@ export default function Bulk() {
           </div>
           <div className="form-group">
             <label className="form-label">Cevap tonu</label>
-            <select className="form-control" value={tone} onChange={(event) => setTone(event.target.value)}>
+            <select className="form-control" value={tone} disabled={state === 'progress'} onChange={(event) => setTone(event.target.value)}>
               <option>Kibar</option>
               <option>Kurumsal</option>
               <option>Esprili</option>
@@ -256,7 +320,7 @@ export default function Bulk() {
 
         <button
           className="btn btn-primary btn-lg btn-full"
-          disabled={(importMode === 'csv' ? !file : !productUrl.trim()) || state === 'progress'}
+          disabled={requiresAuth || (importMode === 'csv' ? !file : !productUrl.trim()) || state === 'progress'}
           onClick={importMode === 'csv' ? startBulkCsv : startProductImport}
         >
           {state === 'progress'
@@ -267,7 +331,10 @@ export default function Bulk() {
 
       {(state === 'progress' || state === 'done') && (
         <div className="card">
-          <div className="card-title card-title-space"><i className={`fas ${state === 'progress' ? 'fa-spinner spin' : 'fa-check-circle'}`} /> {state === 'progress' ? 'İşleniyor' : 'Tamamlandı'}</div>
+          <div className="card-title card-title-space">
+            <i className={`fas ${state === 'progress' ? 'fa-spinner spin' : 'fa-check-circle'}`} />
+            {state === 'progress' ? 'İşleniyor' : 'Tamamlandı'}
+          </div>
           <div className="progress-wrap">
             <div className="progress-track"><div className="progress-fill" style={{ width: `${progress}%` }} /></div>
             <div className="progress-label">{progressLabel}</div>
@@ -292,10 +359,7 @@ export default function Bulk() {
           {runMeta?.scraper === 'http-fallback' && (
             <div className="alert alert-info" style={{ marginBottom: 16 }}>
               <i className="fas fa-circle-info" />
-              <span>
-                Tarayıcı destekli çekim bu istekte başarısız oldu, görünebilir yorumlar fallback ile alındı. Kaynak: {runMeta.source} | İçe aktarılan yorum: {runMeta.imported}
-                {runMeta.scraperWarning ? ` | Neden: ${runMeta.scraperWarning}` : ''}
-              </span>
+              <span>Tarayıcı çekimi başarısız olduğu için {runMeta.imported} görünür yorum yedek yöntemle alındı.</span>
             </div>
           )}
 
@@ -309,13 +373,20 @@ export default function Bulk() {
           <div className="table-wrap">
             <table>
               <thead>
-                <tr><th>#</th><th>Yorum</th><th>Duygu</th><th>Kategori</th><th>Özet</th><th>Önerilen cevap</th></tr>
+                <tr>
+                  <th>#</th>
+                  <th>Yorum</th>
+                  <th>Duygu</th>
+                  <th>Kategori</th>
+                  <th>Özet</th>
+                  <th>Önerilen cevap</th>
+                </tr>
               </thead>
               <tbody>
                 {results.map((row, index) => (
                   <tr key={`${row.yorum}-${index}`}>
                     <td className="muted-text">{index + 1}</td>
-                    <td className="truncate table-col-sm">{row.yorum}</td>
+                    <td className="table-col-comment">{row.yorum}</td>
                     <td><span className={`badge ${SENTIMENT_CLASS[row.duygu] || 'badge-neu'}`}>{row.duygu}</span></td>
                     <td><span className="badge badge-cat">{row.kategori}</span></td>
                     <td className="truncate table-col-md">{row.ozet}</td>
