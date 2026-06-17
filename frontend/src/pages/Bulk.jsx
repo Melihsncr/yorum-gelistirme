@@ -151,7 +151,7 @@ export default function Bulk() {
   const neutralCount = results.filter((row) => row.duygu === 'Notr' || row.duygu === 'Nötr').length;
 
   return (
-    <div className="page-narrow">
+    <div className="page-shell bulk-page-wide">
       <div className="page-intro page-intro-compact">
         <div>
           <div className="page-eyebrow">Toplu Analiz Akışı</div>
@@ -293,6 +293,7 @@ export default function Bulk() {
           <div className="form-group">
             <label className="form-label">Hedef yorum sayısı</label>
             <select className="form-control" value={maxReviews} disabled={state === 'progress'} onChange={(event) => setMaxReviews(Number(event.target.value))}>
+              <option value={10}>10 yorum</option>
               <option value={20}>20 yorum</option>
               <option value={30}>30 yorum</option>
               <option value={50}>50 yorum</option>

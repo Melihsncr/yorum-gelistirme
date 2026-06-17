@@ -459,6 +459,10 @@ select {
   margin: 0 auto;
 }
 
+.bulk-page-wide {
+  max-width: 1440px;
+}
+
 .page-intro {
   display: flex;
   justify-content: space-between;
@@ -1863,6 +1867,10 @@ table {
   border-collapse: collapse;
 }
 
+.table-wrap table {
+  min-width: 1320px;
+}
+
 th,
 td {
   padding: 13px 12px;
@@ -1896,8 +1904,8 @@ tbody tr:hover {
 .table-col-md { max-width: 220px; }
 .table-col-lg { max-width: 260px; }
 .table-col-comment {
-  min-width: 320px;
-  max-width: 420px;
+  min-width: 420px;
+  max-width: 560px;
   white-space: normal;
   line-height: 1.55;
 }
