@@ -18,6 +18,7 @@ export default function Bulk() {
   const [progressLabel, setProgressLabel] = useState('');
   const [state, setState] = useState('idle');
   const [results, setResults] = useState([]);
+  const [runMeta, setRunMeta] = useState(null);
   const [error, setError] = useState('');
   const [over, setOver] = useState(false);
   const inputRef = useRef(null);
@@ -31,6 +32,7 @@ export default function Bulk() {
   function beginRun() {
     setState('progress');
     setResults([]);
+    setRunMeta(null);
     setProgress(0);
     setProgressLabel('Hazırlanıyor...');
     setError('');
@@ -50,6 +52,12 @@ export default function Bulk() {
     setProgress(100);
     setProgressLabel(`Tamamlandı. ${data.total} yorum analiz edildi ve kaydedildi.`);
     setResults(data.results);
+    setRunMeta({
+      source: data.source,
+      imported: data.imported,
+      scraper: data.scraper,
+      scraperWarning: data.scraperWarning,
+    });
     setState('done');
   }
 
@@ -262,6 +270,20 @@ export default function Bulk() {
             <div className="card-title"><i className="fas fa-table" /> Analiz sonuçları</div>
             <button className="btn btn-ghost" onClick={downloadCsv}><i className="fas fa-download" /> CSV indir</button>
           </div>
+
+          {runMeta?.scraper === 'playwright' && (
+            <div className="alert alert-success" style={{ marginBottom: 16 }}>
+              <i className="fas fa-wand-magic-sparkles" />
+              <span>Yorumlar tarayıcı destekli çekim ile alındı. Kaynak: {runMeta.source} | İçe aktarılan yorum: {runMeta.imported}</span>
+            </div>
+          )}
+
+          {runMeta?.scraper === 'http-fallback' && (
+            <div className="alert alert-info" style={{ marginBottom: 16 }}>
+              <i className="fas fa-circle-info" />
+              <span>Tarayıcı destekli çekim bu istekte başarısız oldu, görünebilir yorumlar fallback ile alındı. Kaynak: {runMeta.source} | İçe aktarılan yorum: {runMeta.imported}</span>
+            </div>
+          )}
 
           <div className="bulk-stat-row">
             <span className="bulk-stat bs-pos">Pozitif: {positiveCount}</span>

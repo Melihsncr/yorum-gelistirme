@@ -120,6 +120,8 @@ router.post('/bulk/product', async (req, res) => {
       source: productData.platform,
       productRef: productData.productRef,
       imported: productData.reviews.length,
+      scraper: productData.scraper || 'unknown',
+      scraperWarning: productData.scraperWarning || '',
     });
   } catch (error) {
     res.status(500).json({ error: error.message || 'Ürün yorumları alınırken hata oluştu.' });
