@@ -126,7 +126,7 @@ export default function Bulk() {
           <div className="page-eyebrow">Toplu Analiz Akışı</div>
           <h1 className="page-intro-title">Ürün linki veya CSV ile yorum akışını başlat</h1>
           <p className="page-intro-sub">
-            Amazon, Trendyol veya Hepsiburada ürün linkini yapıştırıp yorumları otomatik çek veya `yorum` sütunlu CSV yükleyip tek seferde analiz et.
+            Amazon ürün linkinden yorumları otomatik çek; CSV yükleyerek tüm platform yorumlarını tek seferde analiz et.
           </p>
         </div>
       </div>
@@ -136,14 +136,14 @@ export default function Bulk() {
           <span className="flow-visual-kicker">Toplu görünüm</span>
           <h2>Ürün linkinden yorumları topla, otomatik geliştir.</h2>
           <p>
-            Amazon, Trendyol ve Hepsiburada ürün linklerinden gelen çoklu yorumları topla; duygu yoğunluğunu,
+            Amazon ürün linkinden gelen yorumları topla; duygu yoğunluğunu,
             kategori dağılımını ve satıcıya özel cevap önerilerini tek turda üret.
           </p>
         </div>
         <div className="bulk-visual-board">
-          <div className="bulk-board-row"><span>Amazon</span><strong>30 yorum</strong></div>
-          <div className="bulk-board-row"><span>Trendyol</span><strong>Ürün linki</strong></div>
-          <div className="bulk-board-row"><span>Hepsiburada</span><strong>Satıcı aksiyonu</strong></div>
+          <div className="bulk-board-row"><span>Amazon</span><strong>Canlı ürün linki</strong></div>
+          <div className="bulk-board-row"><span>Trendyol</span><strong>Beta / koruma sınırlı</strong></div>
+          <div className="bulk-board-row"><span>Hepsiburada</span><strong>Beta / ağ kararsız</strong></div>
           <div className="bulk-board-chart">
             <i style={{ height: '72%' }} />
             <i style={{ height: '48%' }} />
@@ -154,7 +154,12 @@ export default function Bulk() {
 
       <div className="alert alert-info">
         <i className="fas fa-circle-info" />
-        <div>Amazon, Trendyol veya Hepsiburada ürün linki ile otomatik çekim yapabilir veya CSV dosyanda <strong>yorum</strong> adında bir sütun kullanabilirsin. En fazla 500 satır işlenir.</div>
+        <div>Amazon ürün linki canlı desteklenir. Trendyol ve Hepsiburada ürün linki modülü beta durumundadır. Tüm platformlar için CSV dosyanda <strong>yorum</strong> adında bir sütun kullanabilirsin. En fazla 500 satır işlenir.</div>
+      </div>
+
+      <div className="alert alert-success">
+        <i className="fas fa-bolt" />
+        <div><strong>Önerilen demo akışı:</strong> Amazon ürün linki ile otomatik yorum çekimi yap, ardından sonuçları Gemini, Llama ve OpenRouter ile geliştir.</div>
       </div>
 
       {error && <div className="alert alert-error"><i className="fas fa-circle-exclamation" /><span>{error}</span></div>}
@@ -177,12 +182,12 @@ export default function Bulk() {
             <label className="form-label">Ürün linki</label>
             <input
               className="form-control"
-              placeholder="https://www.amazon.com.tr/... veya https://www.trendyol.com/... veya https://www.hepsiburada.com/..."
+              placeholder="https://www.amazon.com.tr/... önerilen canlı akış"
               value={productUrl}
               onChange={(event) => setProductUrl(event.target.value)}
             />
             <p className="compare-help">
-              Sistem linkin hangi platforma ait olduğunu tanır ve ilk yorumları toplamaya çalışır. Korumalı sayfalarda sonuç değişebilir.
+              Amazon ürün linklerinde otomatik çekim canlı çalışır. Trendyol ve Hepsiburada tarafı beta durumundadır; koruma veya ağ kaynaklı hata verebilir.
             </p>
           </div>
         ) : (

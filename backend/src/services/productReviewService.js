@@ -25,6 +25,7 @@ function sleep(ms) {
 async function requestPage(url, referer, attempt = 1) {
   try {
     return await fetch(url, {
+      signal: AbortSignal.timeout(15000),
       headers: {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0 Safari/537.36',
         'Accept-Language': 'tr-TR,tr;q=0.9,en-US;q=0.8,en;q=0.7',
@@ -142,6 +143,8 @@ function extractAmazonMeta(parsedUrl) {
 async function fetchAmazonReviews(parsedUrl, options) {
   const { asin, origin } = extractAmazonMeta(parsedUrl);
   const maxReviews = Math.min(Number(options.maxReviews) || 30, 100);
+  const collected = [];
+  const seen = new Set();
   const productPageHtml = await fetchHtml(parsedUrl.toString(), origin);
   const productPageReviews = extractWithPatterns(
     productPageHtml,
@@ -152,17 +155,20 @@ async function fetchAmazonReviews(parsedUrl, options) {
     maxReviews,
   );
 
-  if (productPageReviews.length) {
-    return { platform: 'amazon', productRef: asin, reviews: productPageReviews };
+  for (const review of productPageReviews) {
+    if (seen.has(review)) continue;
+    seen.add(review);
+    collected.push(review);
+    if (collected.length >= maxReviews) {
+      return { platform: 'amazon', productRef: asin, reviews: collected };
+    }
   }
 
   const maxPages = Math.min(Number(options.maxPages) || 3, 5);
-  const collected = [];
-  const seen = new Set();
 
   for (let pageNumber = 1; pageNumber <= maxPages; pageNumber += 1) {
     const url = `${origin}/product-reviews/${asin}/ref=cm_cr_dp_d_show_all_btm?ie=UTF8&reviewerType=all_reviews&pageNumber=${pageNumber}`;
-    const html = await fetchHtml(url, origin);
+    const html = await fetchHtml(url, parsedUrl.toString());
     const pageReviews = extractWithPatterns(
       html,
       [
@@ -216,7 +222,14 @@ async function fetchTrendyolReviews(parsedUrl, options) {
 }
 
 async function fetchHepsiburadaReviews(parsedUrl, options) {
-  const html = await fetchHtml(parsedUrl.toString(), parsedUrl.origin);
+  let html = '';
+
+  try {
+    html = await fetchHtml(parsedUrl.toString(), parsedUrl.origin);
+  } catch (error) {
+    throw new Error(`Hepsiburada ürün sayfasına erişilemedi: ${error.message}`);
+  }
+
   const maxReviews = Math.min(Number(options.maxReviews) || 30, 100);
   const reviews = extractWithPatterns(html, [
     /"reviewBody":"([^"]+)"/gi,
