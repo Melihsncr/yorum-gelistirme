@@ -1868,7 +1868,7 @@ table {
 }
 
 .table-wrap table {
-  min-width: 1320px;
+  min-width: 1540px;
 }
 
 th,
@@ -1906,6 +1906,18 @@ tbody tr:hover {
 .table-col-comment {
   min-width: 420px;
   max-width: 560px;
+  white-space: normal;
+  line-height: 1.55;
+}
+.table-col-summary {
+  min-width: 320px;
+  max-width: 420px;
+  white-space: normal;
+  line-height: 1.55;
+}
+.table-col-answer {
+  min-width: 520px;
+  max-width: 680px;
   white-space: normal;
   line-height: 1.55;
 }

@@ -16,10 +16,8 @@ export async function fetchProductReviews(productUrl, options = {}) {
           scraper: 'http-fallback',
           scraperWarning: playwrightError.message,
         };
-      } catch (fallbackError) {
-        throw new Error(
-          `Otomatik çekim başarısız oldu. Playwright: ${playwrightError.message} | Fallback: ${fallbackError.message}`,
-        );
+      } catch (_fallbackError) {
+        throw new Error('Ürün yorumları alınamadı. Link korumalı olabilir veya geçici olarak erişilemiyor olabilir.');
       }
     }
   }

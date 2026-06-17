@@ -9,6 +9,27 @@ const SENTIMENT_CLASS = {
   Notr: 'badge-neu',
 };
 
+function normalizeBulkError(message) {
+  if (!message) {
+    return 'Yorumlar alınırken bir hata oluştu.';
+  }
+
+  const lowered = String(message).toLowerCase();
+
+  if (
+    lowered.includes('playwright')
+    || lowered.includes('fallback')
+    || lowered.includes('executable')
+    || lowered.includes('otomatik')
+    || lowered.includes('amazon yorumları çekilemedi')
+    || lowered.includes('fetch failed')
+  ) {
+    return 'Ürün yorumları şu anda alınamadı. Lütfen başka bir link dene veya biraz sonra tekrar dene.';
+  }
+
+  return String(message);
+}
+
 export default function Bulk() {
   const { user } = useOutletContext();
   const [importMode, setImportMode] = useState('product');
@@ -67,7 +88,7 @@ export default function Bulk() {
 
   function finishError(message, timer) {
     window.clearInterval(timer);
-    setError(message);
+    setError(normalizeBulkError(message));
     setState('idle');
     setProgress(0);
   }
@@ -390,8 +411,8 @@ export default function Bulk() {
                     <td className="table-col-comment">{row.yorum}</td>
                     <td><span className={`badge ${SENTIMENT_CLASS[row.duygu] || 'badge-neu'}`}>{row.duygu}</span></td>
                     <td><span className="badge badge-cat">{row.kategori}</span></td>
-                    <td className="truncate table-col-md">{row.ozet}</td>
-                    <td className="truncate table-col-lg">{row.cevap}</td>
+                    <td className="table-col-summary">{row.ozet}</td>
+                    <td className="table-col-answer">{row.cevap}</td>
                   </tr>
                 ))}
               </tbody>
