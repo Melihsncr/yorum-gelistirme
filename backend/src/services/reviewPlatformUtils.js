@@ -24,7 +24,7 @@ export function dedupeTrimmed(values, maxReviews) {
 
   for (const value of values) {
     const cleaned = stripHtml(value);
-    if (!cleaned || cleaned.length < 12 || seen.has(cleaned)) continue;
+    if (!cleaned || cleaned.length < 5 || seen.has(cleaned)) continue;
     seen.add(cleaned);
     reviews.push(cleaned);
     if (reviews.length >= maxReviews) break;

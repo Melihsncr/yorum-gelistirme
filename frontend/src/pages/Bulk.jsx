@@ -17,7 +17,11 @@ function normalizeBulkError(message) {
   const lowered = String(message).toLowerCase();
 
   if (
-    lowered.includes('playwright')
+    lowered.includes('groq')
+    || lowered.includes('premature close')
+    || lowered.includes('baglantisi gecici olarak kesildi')
+    || lowered.includes('model servisine su anda erisilemiyor')
+    || lowered.includes('playwright')
     || lowered.includes('fallback')
     || lowered.includes('executable')
     || lowered.includes('otomatik')
@@ -35,7 +39,7 @@ export default function Bulk() {
   const [importMode, setImportMode] = useState('product');
   const [file, setFile] = useState(null);
   const [productUrl, setProductUrl] = useState('');
-  const [maxReviews, setMaxReviews] = useState(30);
+  const [maxReviews, setMaxReviews] = useState(13);
   const [model, setModel] = useState('gemini');
   const [tone, setTone] = useState('Kibar');
   const [progress, setProgress] = useState(0);
@@ -314,7 +318,9 @@ export default function Bulk() {
           <div className="form-group">
             <label className="form-label">Hedef yorum sayısı</label>
             <select className="form-control" value={maxReviews} disabled={state === 'progress'} onChange={(event) => setMaxReviews(Number(event.target.value))}>
+              <option value={5}>5 yorum</option>
               <option value={10}>10 yorum</option>
+              <option value={13}>13 yorum</option>
               <option value={20}>20 yorum</option>
               <option value={30}>30 yorum</option>
               <option value={50}>50 yorum</option>

@@ -110,7 +110,7 @@ router.post('/bulk/product', requireAuth, async (req, res) => {
 
     const productData = await fetchProductReviews(productUrl.trim(), {
       maxReviews,
-      maxPages: 4,
+      maxPages: 6,
     });
 
     const results = await analyzeComments(productData.reviews, tone, model);

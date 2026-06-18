@@ -20,6 +20,7 @@ const VALID_CATEGORIES = new Set([
 
 const NETWORK_RETRY_COUNT = 2;
 const NETWORK_RETRY_DELAY_MS = 900;
+const NETWORK_FAILURE_MESSAGE = 'Model servisine su anda erisilemiyor. Lutfen biraz sonra tekrar deneyin veya baska model secin.';
 
 function buildPrompt(comment, tone) {
   return `Asagidaki musteri yorumunu analiz et.
@@ -200,13 +201,20 @@ export async function analyzeComment(comment, tone, modelKey) {
     try {
       return await primaryAnalyzer(prompt);
     } catch (primaryError) {
-      if (!isRetryableProviderError(primaryError.message) || !['gemini', 'llama'].includes(modelKey)) {
+      const shouldTryFallback =
+        modelKey === 'llama'
+          || (modelKey === 'gemini' && isRetryableProviderError(primaryError.message))
+          || (modelKey === 'openrouter' && isRetryableProviderError(primaryError.message));
+
+      if (!shouldTryFallback) {
         throw primaryError;
       }
 
       const fallbackOrder =
         modelKey === 'gemini'
           ? ['llama', 'openrouter']
+          : modelKey === 'llama'
+            ? ['openrouter', 'gemini']
           : ['openrouter', 'gemini'];
 
       for (const fallbackKey of fallbackOrder) {
@@ -223,6 +231,10 @@ export async function analyzeComment(comment, tone, modelKey) {
         } catch {
           // Try the next fallback provider.
         }
+      }
+
+      if (modelKey === 'llama' && isRetryableProviderError(primaryError.message)) {
+        throw new Error(NETWORK_FAILURE_MESSAGE);
       }
 
       throw primaryError;

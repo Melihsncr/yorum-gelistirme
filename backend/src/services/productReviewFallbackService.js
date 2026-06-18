@@ -73,8 +73,11 @@ async function fetchAmazonReviews(parsedUrl, options) {
   const productPageReviews = extractWithPatterns(
     productPageHtml,
     [
+      /data-hook="review-body"[\s\S]*?<span[^>]*>([\s\S]*?)<\/span>/gi,
+      /data-hook="review-collapsed"[\s\S]*?<span[^>]*>([\s\S]*?)<\/span>/gi,
       /data-hook="reviewRichContentContainer"[\s\S]*?<span>([\s\S]*?)<\/span>/gi,
       /data-hook="reviewTextContainer"[\s\S]*?<span[^>]*>([\s\S]*?)<\/span>/gi,
+      /"reviewBody":"([^"]+)"/gi,
     ],
     maxReviews,
   );
@@ -88,7 +91,7 @@ async function fetchAmazonReviews(parsedUrl, options) {
     }
   }
 
-  const maxPages = Math.min(Number(options.maxPages) || 3, 5);
+  const maxPages = Math.min(Number(options.maxPages) || 5, 8);
 
   for (let pageNumber = 1; pageNumber <= maxPages; pageNumber += 1) {
     const url = `${origin}/product-reviews/${asin}/ref=cm_cr_dp_d_show_all_btm?ie=UTF8&reviewerType=all_reviews&pageNumber=${pageNumber}`;
@@ -96,8 +99,11 @@ async function fetchAmazonReviews(parsedUrl, options) {
     const pageReviews = extractWithPatterns(
       html,
       [
+        /data-hook="review-collapsed"[\s\S]*?<span[^>]*>([\s\S]*?)<\/span>/gi,
         /data-hook="reviewRichContentContainer"[\s\S]*?<span>([\s\S]*?)<\/span>/gi,
         /data-hook="review-body"[\s\S]*?<span[^>]*>([\s\S]*?)<\/span>/gi,
+        /"reviewBody":"([^"]+)"/gi,
+        /"reviewText":"([^"]+)"/gi,
       ],
       maxReviews,
     );

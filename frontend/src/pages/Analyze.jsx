@@ -39,7 +39,11 @@ function normalizeAnalyzeError(message) {
   const lowered = String(message).toLowerCase();
 
   if (
-    lowered.includes('playwright')
+    lowered.includes('groq')
+    || lowered.includes('premature close')
+    || lowered.includes('baglantisi gecici olarak kesildi')
+    || lowered.includes('model servisine su anda erisilemiyor')
+    || lowered.includes('playwright')
     || lowered.includes('fallback')
     || lowered.includes('executable')
     || lowered.includes('browser')
