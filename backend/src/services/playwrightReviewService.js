@@ -111,16 +111,8 @@ async function fetchAmazonReviews(parsedUrl, options) {
     for (let pageNumber = 1; pageNumber <= maxPages; pageNumber += 1) {
       const separator = preferredReviewUrl.includes('?') ? '&' : '?';
       const pageUrl = `${preferredReviewUrl}${separator}pageNumber=${pageNumber}`;
-      try {
-        await preparePage(page, pageUrl);
-        await dismissCommonPopups(page);
-      } catch (error) {
-        if (collected.length) {
-          break;
-        }
-
-        throw error;
-      }
+      await preparePage(page, pageUrl);
+      await dismissCommonPopups(page);
 
       const reviewTexts = await extractTextList(
         page,

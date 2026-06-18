@@ -95,18 +95,7 @@ async function fetchAmazonReviews(parsedUrl, options) {
 
   for (let pageNumber = 1; pageNumber <= maxPages; pageNumber += 1) {
     const url = `${origin}/product-reviews/${asin}/ref=cm_cr_dp_d_show_all_btm?ie=UTF8&reviewerType=all_reviews&pageNumber=${pageNumber}`;
-    let html = '';
-
-    try {
-      html = await fetchHtml(url, parsedUrl.toString());
-    } catch (error) {
-      if (collected.length) {
-        break;
-      }
-
-      throw error;
-    }
-
+    const html = await fetchHtml(url, parsedUrl.toString());
     const pageReviews = extractWithPatterns(
       html,
       [
