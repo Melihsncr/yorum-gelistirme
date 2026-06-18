@@ -1,6 +1,9 @@
 import { useRef, useState } from 'react';
 import { Link, useOutletContext } from 'react-router-dom';
 import { api } from '../api/client.js';
+import geminiLogo from '../assets/ai/gemini.png';
+import groqLogo from '../assets/ai/groq.png';
+import openRouterLogo from '../assets/ai/openrouter.png';
 
 const MODEL_LABELS = {
   gemini: 'Gemini 2.5 Flash',
@@ -16,9 +19,9 @@ const SENTIMENT_CLASS = {
 };
 
 const MODEL_OPTIONS = [
-  { key: 'gemini', logoClass: 'engine-logo-g', markClass: 'engine-mark-gemini', name: 'Gemini 2.5 Flash', sub: 'Önerilen - hızlı ve dengeli' },
-  { key: 'llama', logoClass: 'engine-logo-l', markClass: 'engine-mark-groq', name: 'Groq Llama 3.3', sub: '70B - hızlı cevap üretimi' },
-  { key: 'openrouter', logoClass: 'engine-logo-d', markClass: 'engine-mark-openrouter', name: 'OpenRouter Free', sub: 'Ücretsiz model yönlendirme' },
+  { key: 'gemini', logoClass: 'engine-logo-g', logoSrc: geminiLogo, logoAlt: 'Gemini', name: 'Gemini 2.5 Flash', sub: 'Önerilen - hızlı ve dengeli' },
+  { key: 'llama', logoClass: 'engine-logo-l', logoSrc: groqLogo, logoAlt: 'Groq', name: 'Groq Llama 3.3', sub: '70B - hızlı cevap üretimi' },
+  { key: 'openrouter', logoClass: 'engine-logo-d', logoSrc: openRouterLogo, logoAlt: 'OpenRouter', name: 'OpenRouter Free', sub: 'Ücretsiz model yönlendirme' },
 ];
 
 const TIP_CARDS = [
@@ -284,7 +287,7 @@ export default function Analyze() {
                     <input type="radio" name="model" value={option.key} checked={model === option.key} readOnly />
                     <div className={`engine-card${model === option.key ? ' selected' : ''}`}>
                       <div className={`engine-logo ${option.logoClass}`}>
-                        <span className={`engine-mark ${option.markClass}`} aria-hidden="true" />
+                        <img src={option.logoSrc} alt={option.logoAlt} className="engine-logo-image" />
                       </div>
                       <div>
                         <div className="engine-name">{option.name}</div>
