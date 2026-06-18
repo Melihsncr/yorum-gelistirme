@@ -33,6 +33,7 @@ export const api = {
   getHistory: (params = {}) => request('GET', `/history?${new URLSearchParams(params)}`),
   getStatus: () => request('GET', '/status'),
   analyze: (data) => request('POST', '/analyze', data),
+  analyzeProductPreview: (data) => request('POST', '/analyze/product-preview', data),
   compare: (data) => request('POST', '/compare', data),
   save: (data) => request('POST', '/save', data),
   reset: () => request('POST', '/reset'),

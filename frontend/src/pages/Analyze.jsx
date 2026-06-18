@@ -1,4 +1,5 @@
 import { useRef, useState } from 'react';
+import { Link, useOutletContext } from 'react-router-dom';
 import { api } from '../api/client.js';
 
 const MODEL_LABELS = {
@@ -17,7 +18,7 @@ const SENTIMENT_CLASS = {
 const MODEL_OPTIONS = [
   { key: 'gemini', logo: 'G', logoClass: 'engine-logo-g', name: 'Gemini 2.5 Flash', sub: 'Önerilen - hızlı ve dengeli' },
   { key: 'llama', logo: 'L', logoClass: 'engine-logo-l', name: 'Groq Llama 3.3', sub: '70B - hızlı cevap üretimi' },
-  { key: 'openrouter', logo: 'OR', logoClass: 'engine-logo-d', name: 'OpenRouter Free', sub: 'Ucretsiz model yonlendirme' },
+  { key: 'openrouter', logo: 'OR', logoClass: 'engine-logo-d', name: 'OpenRouter Free', sub: 'Ücretsiz model yönlendirme' },
 ];
 
 const TIP_CARDS = [
@@ -28,16 +29,29 @@ const TIP_CARDS = [
 ];
 
 export default function Analyze() {
+  const { user } = useOutletContext();
   const [comment, setComment] = useState('');
+  const [productUrl, setProductUrl] = useState('');
+  const [productReviews, setProductReviews] = useState([]);
+  const [selectedReview, setSelectedReview] = useState('');
+  const [productMeta, setProductMeta] = useState(null);
   const [model, setModel] = useState('gemini');
   const [tone, setTone] = useState('Kibar');
   const [state, setState] = useState('idle');
   const [result, setResult] = useState(null);
   const [errorMessage, setErrorMessage] = useState('');
   const [copied, setCopied] = useState(false);
+  const [previewLoading, setPreviewLoading] = useState(false);
   const textareaRef = useRef(null);
+  const requiresAuth = !user;
 
   async function doAnalyze() {
+    if (requiresAuth) {
+      setState('error');
+      setErrorMessage('Analiz yapmak için önce giriş yapmalısın.');
+      return;
+    }
+
     if (!comment.trim()) {
       setState('error');
       setErrorMessage('Lütfen bir yorum gir.');
@@ -64,11 +78,66 @@ export default function Analyze() {
     }
   }
 
+  async function fetchProductPreview() {
+    if (requiresAuth) {
+      setState('error');
+      setErrorMessage('Ürün yorumlarını çekmek için önce giriş yapmalısın.');
+      return;
+    }
+
+    if (!productUrl.trim()) {
+      setState('error');
+      setErrorMessage('Önce geçerli bir ürün linki gir.');
+      return;
+    }
+
+    setPreviewLoading(true);
+    setErrorMessage('');
+
+    try {
+      const response = await api.analyzeProductPreview({
+        productUrl: productUrl.trim(),
+        maxReviews: 10,
+      });
+
+      const reviews = response.reviews || [];
+      const firstReview = reviews[0] || '';
+
+      setProductReviews(reviews);
+      setSelectedReview(firstReview);
+      setProductMeta({
+        source: response.source,
+        imported: response.imported,
+        scraper: response.scraper,
+      });
+
+      if (!firstReview) {
+        setState('error');
+        setErrorMessage('Bu linkten tekli analiz için gösterilebilir yorum alınamadı.');
+        return;
+      }
+
+      setComment(firstReview);
+      setState('idle');
+    } catch (error) {
+      setState('error');
+      setErrorMessage(error.message);
+    } finally {
+      setPreviewLoading(false);
+    }
+  }
+
   async function copyReply() {
     if (!result?.reply) return;
     await navigator.clipboard.writeText(result.reply);
     setCopied(true);
     window.setTimeout(() => setCopied(false), 2000);
+  }
+
+  function applySelectedReview(value) {
+    setSelectedReview(value);
+    setComment(value);
+    textareaRef.current?.focus();
   }
 
   return (
@@ -114,6 +183,71 @@ export default function Analyze() {
 
       <div className="analyze-layout">
         <div className="analyze-form-col">
+          {requiresAuth && (
+            <div className="alert alert-info">
+              <i className="fas fa-lock" />
+              <div>
+                Tekli analiz başlatmak için önce giriş yap veya kayıt ol.
+                {' '}
+                <Link to="/auth?mode=login" className="inline-alert-link">Giriş yap</Link>
+                {' '}
+                veya
+                {' '}
+                <Link to="/auth?mode=signup" className="inline-alert-link">kayıt ol</Link>.
+              </div>
+            </div>
+          )}
+
+          <div className="card work-card">
+            <div className="section-kicker">Ürün linki ile doldur</div>
+            <div className="card-title card-title-space"><i className="fas fa-link" /> Üründen örnek yorum çek</div>
+            <input
+              className="form-control"
+              placeholder="https://www.amazon.com.tr/... gibi bir ürün linki gir"
+              value={productUrl}
+              onChange={(event) => setProductUrl(event.target.value)}
+              disabled={previewLoading || state === 'loading'}
+            />
+            <div className="char-row analyze-source-row">
+              <span className="char-count">Tekli analiz için en fazla 10 yorum önizlemesi alınır.</span>
+              <button
+                type="button"
+                className="btn btn-ghost"
+                onClick={fetchProductPreview}
+                disabled={requiresAuth || previewLoading || state === 'loading' || !productUrl.trim()}
+              >
+                {previewLoading
+                  ? <><i className="fas fa-spinner spin" /> Yorumlar alınıyor...</>
+                  : <><i className="fas fa-wand-magic-sparkles" /> Linkten yorum getir</>}
+              </button>
+            </div>
+
+            {productMeta && (
+              <div className="analyze-source-meta">
+                <span className="badge badge-cat">{String(productMeta.source || '').toUpperCase()}</span>
+                <span className="char-count">{productMeta.imported} yorum bulundu</span>
+                <span className="char-count">Yöntem: {productMeta.scraper}</span>
+              </div>
+            )}
+
+            {!!productReviews.length && (
+              <div className="review-picker-list">
+                {productReviews.map((item, index) => (
+                  <button
+                    key={`${index}-${item.slice(0, 24)}`}
+                    type="button"
+                    className={`review-picker-item${selectedReview === item ? ' active' : ''}`}
+                    onClick={() => applySelectedReview(item)}
+                  >
+                    <span className="review-picker-index">Yorum {index + 1}</span>
+                    <strong>{item}</strong>
+                    <small>Metin alanına aktar</small>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+
           <div className="card work-card">
             <div className="section-kicker">Girdi</div>
             <div className="card-title card-title-space"><i className="fas fa-comment-dots" /> Müşteri yorumu</div>
@@ -174,7 +308,7 @@ export default function Analyze() {
             </div>
           </div>
 
-          <button className="btn btn-primary btn-lg btn-full" onClick={doAnalyze} disabled={state === 'loading'}>
+          <button className="btn btn-primary btn-lg btn-full" onClick={doAnalyze} disabled={requiresAuth || state === 'loading'}>
             {state === 'loading'
               ? <><i className="fas fa-spinner spin" /> Analiz ediliyor...</>
               : <><i className="fas fa-magnifying-glass-chart" /> Yorumu analiz et</>}

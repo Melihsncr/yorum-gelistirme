@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { analyzeComment, MODEL_NAMES, getApiStatus } from '../services/llmService.js';
 import { saveLog, deleteAll } from '../config/db.js';
+import { fetchProductReviews } from '../services/productReviewService.js';
 
 const router = Router();
 
@@ -30,6 +31,33 @@ router.post('/analyze', async (req, res) => {
     res.json(result);
   } catch (error) {
     res.status(500).json({ error: error.message || 'Analiz sırasında hata oluştu' });
+  }
+});
+
+router.post('/analyze/product-preview', async (req, res) => {
+  try {
+    const { productUrl = '', maxReviews = 10 } = req.body || {};
+
+    if (!productUrl.trim()) {
+      return res.status(400).json({ error: 'Ürün linki boş olamaz.' });
+    }
+
+    const safeMaxReviews = Math.min(Math.max(Number(maxReviews) || 10, 1), 10);
+    const productData = await fetchProductReviews(productUrl.trim(), {
+      maxReviews: safeMaxReviews,
+      maxPages: 3,
+    });
+
+    res.json({
+      source: productData.platform,
+      productRef: productData.productRef,
+      imported: productData.reviews.length,
+      scraper: productData.scraper || 'unknown',
+      scraperWarning: productData.scraperWarning || '',
+      reviews: productData.reviews.slice(0, safeMaxReviews),
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message || 'Ürün yorumları alınamadı.' });
   }
 });
 
