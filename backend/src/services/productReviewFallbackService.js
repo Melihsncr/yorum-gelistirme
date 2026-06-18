@@ -69,7 +69,8 @@ async function fetchAmazonReviews(parsedUrl, options) {
   const maxReviews = Math.min(Number(options.maxReviews) || 30, 100);
   const collected = [];
   const seen = new Set();
-  const productPageHtml = await fetchHtml(parsedUrl.toString(), origin);
+  const canonicalProductUrl = `${origin}/dp/${asin}`;
+  const productPageHtml = await fetchHtml(canonicalProductUrl, origin);
   const productPageReviews = extractWithPatterns(
     productPageHtml,
     [
@@ -95,7 +96,7 @@ async function fetchAmazonReviews(parsedUrl, options) {
 
   for (let pageNumber = 1; pageNumber <= maxPages; pageNumber += 1) {
     const url = `${origin}/product-reviews/${asin}/ref=cm_cr_dp_d_show_all_btm?ie=UTF8&reviewerType=all_reviews&pageNumber=${pageNumber}`;
-    const html = await fetchHtml(url, parsedUrl.toString());
+    const html = await fetchHtml(url, canonicalProductUrl);
     const pageReviews = extractWithPatterns(
       html,
       [

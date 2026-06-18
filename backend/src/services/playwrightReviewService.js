@@ -95,11 +95,12 @@ async function fetchAmazonReviews(parsedUrl, options) {
   const maxPages = Math.min(Number(options.maxPages) || 4, 8);
 
   return withBrowser(async (page) => {
+    const canonicalProductUrl = `${origin}/dp/${asin}`;
     const reviewUrl = `${origin}/product-reviews/${asin}/ref=cm_cr_dp_d_show_all_btm?ie=UTF8&reviewerType=all_reviews`;
     const collected = [];
     const seen = new Set();
 
-    await preparePage(page, parsedUrl.toString());
+    await preparePage(page, canonicalProductUrl);
     await dismissCommonPopups(page);
 
     const pageHtml = await page.content();
