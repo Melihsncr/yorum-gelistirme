@@ -18,6 +18,9 @@ const VALID_CATEGORIES = new Set([
   'Genel',
 ]);
 
+const NETWORK_RETRY_COUNT = 2;
+const NETWORK_RETRY_DELAY_MS = 900;
+
 function buildPrompt(comment, tone) {
   return `Asagidaki musteri yorumunu analiz et.
 Yorum: "${comment}"
@@ -84,7 +87,44 @@ function parseResponse(raw) {
 }
 
 function isRetryableProviderError(message = '') {
-  return /503|429|high demand|unavailable|temporarily|timeout/i.test(message);
+  return /503|429|high demand|unavailable|temporarily|timeout|premature close|fetch failed|network|socket hang up|econnreset|etimedout/i.test(
+    String(message || ''),
+  );
+}
+
+function sleep(ms) {
+  return new Promise((resolve) => {
+    setTimeout(resolve, ms);
+  });
+}
+
+function normalizeProviderError(error, providerName) {
+  const message = String(error?.message || error || '');
+
+  if (/premature close|fetch failed|network|socket hang up|econnreset|etimedout/i.test(message)) {
+    return new Error(`${providerName} baglantisi gecici olarak kesildi. Lutfen tekrar deneyin.`);
+  }
+
+  return new Error(message || `${providerName} istegi sirasinda hata olustu.`);
+}
+
+async function withRetry(task, providerName) {
+  let lastError;
+
+  for (let attempt = 0; attempt <= NETWORK_RETRY_COUNT; attempt += 1) {
+    try {
+      return await task();
+    } catch (error) {
+      lastError = error;
+      if (attempt === NETWORK_RETRY_COUNT || !isRetryableProviderError(error?.message)) {
+        break;
+      }
+
+      await sleep(NETWORK_RETRY_DELAY_MS * (attempt + 1));
+    }
+  }
+
+  throw normalizeProviderError(lastError, providerName);
 }
 
 async function analyzeWithGemini(prompt) {
@@ -104,10 +144,12 @@ async function analyzeWithLlama(prompt) {
   }
 
   const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
-  const response = await groq.chat.completions.create({
-    messages: [{ role: 'user', content: prompt }],
-    model: 'llama-3.3-70b-versatile',
-  });
+  const response = await withRetry(async () => {
+    return groq.chat.completions.create({
+      messages: [{ role: 'user', content: prompt }],
+      model: 'llama-3.3-70b-versatile',
+    });
+  }, 'Groq');
 
   return parseResponse((response.choices[0]?.message?.content || '').trim());
 }
@@ -158,11 +200,15 @@ export async function analyzeComment(comment, tone, modelKey) {
     try {
       return await primaryAnalyzer(prompt);
     } catch (primaryError) {
-      if (!isRetryableProviderError(primaryError.message) || modelKey !== 'gemini') {
+      if (!isRetryableProviderError(primaryError.message) || !['gemini', 'llama'].includes(modelKey)) {
         throw primaryError;
       }
 
-      const fallbackOrder = ['llama', 'openrouter'];
+      const fallbackOrder =
+        modelKey === 'gemini'
+          ? ['llama', 'openrouter']
+          : ['openrouter', 'gemini'];
+
       for (const fallbackKey of fallbackOrder) {
         const fallbackAnalyzer = ANALYZERS[fallbackKey];
         if (!fallbackAnalyzer) continue;
