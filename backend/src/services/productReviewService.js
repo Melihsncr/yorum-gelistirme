@@ -1,6 +1,12 @@
 import { fetchProductReviewsFallback } from './productReviewFallbackService.js';
 import { fetchProductReviewsWithPlaywright } from './playwrightReviewService.js';
 
+function isUserInputError(message = '') {
+  return /ge.cerli bir .r.n linki|amazon linkinden .r.n kodu ..kar.lamad./i.test(
+    String(message || ''),
+  );
+}
+
 export async function fetchProductReviews(productUrl, options = {}) {
   const preferBrowser = process.env.PLAYWRIGHT_REVIEW_SCRAPER !== 'false';
 
@@ -16,7 +22,15 @@ export async function fetchProductReviews(productUrl, options = {}) {
           scraper: 'http-fallback',
           scraperWarning: playwrightError.message,
         };
-      } catch (_fallbackError) {
+      } catch (fallbackError) {
+        if (isUserInputError(playwrightError.message)) {
+          throw playwrightError;
+        }
+
+        if (isUserInputError(fallbackError.message)) {
+          throw fallbackError;
+        }
+
         throw new Error('Ürün yorumları alınamadı. Link korumalı olabilir veya geçici olarak erişilemiyor olabilir.');
       }
     }
