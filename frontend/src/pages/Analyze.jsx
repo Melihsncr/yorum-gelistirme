@@ -16,9 +16,9 @@ const SENTIMENT_CLASS = {
 };
 
 const MODEL_OPTIONS = [
-  { key: 'gemini', logo: 'G', logoClass: 'engine-logo-g', name: 'Gemini 2.5 Flash', sub: 'Önerilen - hızlı ve dengeli' },
-  { key: 'llama', logo: 'L', logoClass: 'engine-logo-l', name: 'Groq Llama 3.3', sub: '70B - hızlı cevap üretimi' },
-  { key: 'openrouter', logo: 'OR', logoClass: 'engine-logo-d', name: 'OpenRouter Free', sub: 'Ücretsiz model yönlendirme' },
+  { key: 'gemini', logoClass: 'engine-logo-g', markClass: 'engine-mark-gemini', name: 'Gemini 2.5 Flash', sub: 'Önerilen - hızlı ve dengeli' },
+  { key: 'llama', logoClass: 'engine-logo-l', markClass: 'engine-mark-groq', name: 'Groq Llama 3.3', sub: '70B - hızlı cevap üretimi' },
+  { key: 'openrouter', logoClass: 'engine-logo-d', markClass: 'engine-mark-openrouter', name: 'OpenRouter Free', sub: 'Ücretsiz model yönlendirme' },
 ];
 
 const TIP_CARDS = [
@@ -283,7 +283,9 @@ export default function Analyze() {
                   <label key={option.key} className="engine-opt" onClick={() => setModel(option.key)}>
                     <input type="radio" name="model" value={option.key} checked={model === option.key} readOnly />
                     <div className={`engine-card${model === option.key ? ' selected' : ''}`}>
-                      <div className={`engine-logo ${option.logoClass}`}>{option.logo}</div>
+                      <div className={`engine-logo ${option.logoClass}`}>
+                        <span className={`engine-mark ${option.markClass}`} aria-hidden="true" />
+                      </div>
                       <div>
                         <div className="engine-name">{option.name}</div>
                         <div className="engine-sub">{option.sub}</div>
