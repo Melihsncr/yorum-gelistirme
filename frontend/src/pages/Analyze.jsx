@@ -31,6 +31,27 @@ const TIP_CARDS = [
   { icon: 'fa-database', color: '#F59E0B', bg: 'rgba(245,158,11,0.14)', title: 'Otomatik kayıt', desc: 'Başarılı analizler veritabanına yazılır.' },
 ];
 
+function normalizeAnalyzeError(message) {
+  if (!message) {
+    return 'İşlem şu anda tamamlanamadı. Lütfen tekrar dene.';
+  }
+
+  const lowered = String(message).toLowerCase();
+
+  if (
+    lowered.includes('playwright')
+    || lowered.includes('fallback')
+    || lowered.includes('executable')
+    || lowered.includes('browser')
+    || lowered.includes('npx playwright')
+    || lowered.includes('fetch failed')
+  ) {
+    return 'Yorumlar şu anda alınamadı. Lütfen başka bir link dene veya biraz sonra tekrar dene.';
+  }
+
+  return String(message);
+}
+
 export default function Analyze() {
   const { user } = useOutletContext();
   const [comment, setComment] = useState('');
@@ -77,7 +98,7 @@ export default function Analyze() {
       setState('result');
     } catch (error) {
       setState('error');
-      setErrorMessage(error.message);
+      setErrorMessage(normalizeAnalyzeError(error.message));
     }
   }
 
@@ -124,7 +145,7 @@ export default function Analyze() {
       setState('idle');
     } catch (error) {
       setState('error');
-      setErrorMessage(error.message);
+      setErrorMessage(normalizeAnalyzeError(error.message));
     } finally {
       setPreviewLoading(false);
     }
@@ -209,7 +230,7 @@ export default function Analyze() {
               placeholder="https://www.amazon.com.tr/... gibi bir ürün linki gir"
               value={productUrl}
               onChange={(event) => setProductUrl(event.target.value)}
-              disabled={previewLoading || state === 'loading'}
+              disabled={requiresAuth || previewLoading || state === 'loading'}
             />
             <div className="char-row analyze-source-row">
               <span className="char-count">Tekli analiz için en fazla 10 yorum önizlemesi alınır.</span>
@@ -260,6 +281,7 @@ export default function Analyze() {
               placeholder={'Müşteri yorumunu buraya yaz.\n\nÖrnek: Ürün çok kaliteli geldi, kargo da hızlıydı. Teşekkürler!'}
               value={comment}
               onChange={(event) => setComment(event.target.value)}
+              disabled={requiresAuth || state === 'loading'}
             />
             <div className="char-row">
               <span className="char-count">{comment.length} karakter</span>
@@ -270,6 +292,7 @@ export default function Analyze() {
                   setComment('');
                   textareaRef.current?.focus();
                 }}
+                disabled={requiresAuth || state === 'loading'}
               >
                 <i className="fas fa-xmark" /> Temizle
               </button>

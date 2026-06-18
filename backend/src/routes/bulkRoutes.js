@@ -4,6 +4,7 @@ import { parse } from 'csv-parse/sync';
 import { analyzeComment, MODEL_NAMES } from '../services/llmService.js';
 import { saveLog } from '../config/db.js';
 import { fetchProductReviews } from '../services/productReviewService.js';
+import { requireAuth } from '../middleware/authMiddleware.js';
 
 const router = Router();
 
@@ -57,7 +58,7 @@ async function analyzeComments(comments, tone, modelKey) {
   return results;
 }
 
-router.post('/bulk', upload.single('file'), async (req, res) => {
+router.post('/bulk', requireAuth, upload.single('file'), async (req, res) => {
   if (!req.file) {
     return res.status(400).json({ error: 'Dosya bulunamadi' });
   }
@@ -94,7 +95,7 @@ router.post('/bulk', upload.single('file'), async (req, res) => {
   res.json({ results, total: results.length });
 });
 
-router.post('/bulk/product', async (req, res) => {
+router.post('/bulk/product', requireAuth, async (req, res) => {
   try {
     const {
       productUrl = '',
