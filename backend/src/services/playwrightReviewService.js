@@ -14,7 +14,7 @@ async function getPlaywright() {
 
   const playwright = await playwrightModulePromise;
   if (!playwright?.chromium) {
-    throw new Error('Playwright bağımlılığı kurulu değil.');
+    throw new Error('Playwright bagimliligi kurulu degil.');
   }
 
   return playwright;
@@ -30,7 +30,8 @@ async function withBrowser(task) {
   try {
     const context = await browser.newContext({
       locale: 'tr-TR',
-      userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0 Safari/537.36',
+      userAgent:
+        'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0 Safari/537.36',
       viewport: { width: 1440, height: 2200 },
     });
     const page = await context.newPage();
@@ -82,7 +83,7 @@ async function extractTextList(page, selectors, maxReviews) {
       );
       values.push(...texts);
     } catch {
-      // Bu selector o sayfada yoksa diğerine geç.
+      // Bu selector o sayfada yoksa digerine gec.
     }
   }
 
@@ -103,8 +104,33 @@ async function fetchAmazonReviews(parsedUrl, options) {
     await preparePage(page, canonicalProductUrl);
     await dismissCommonPopups(page);
 
+    const productPageReviews = await extractTextList(
+      page,
+      [
+        '[data-hook="reviewRichContentContainer"] span',
+        '[data-hook="reviewTextContainer"] span',
+        '[data-hook="review-body"] span',
+        '[data-hook="review-collapsed"] span',
+      ],
+      maxReviews,
+    );
+
+    for (const review of productPageReviews) {
+      if (seen.has(review)) continue;
+      seen.add(review);
+      collected.push(review);
+      if (collected.length >= maxReviews) {
+        return { platform: 'amazon', productRef: asin, reviews: collected };
+      }
+    }
+
     const pageHtml = await page.content();
-    const showAllMatch = pageHtml.match(new RegExp(`href=\\\\?"([^\\\\"]*product-reviews\\/${asin}[^\\\\"]*(?:show_all_top|show_all_btm)[^\\\\"]*)\\\\?"`, 'i'));
+    const showAllMatch = pageHtml.match(
+      new RegExp(
+        `href=\\\\?"([^\\\\"]*product-reviews\\/${asin}[^\\\\"]*(?:show_all_top|show_all_btm)[^\\\\"]*)\\\\?"`,
+        'i',
+      ),
+    );
     const preferredReviewUrl = showAllMatch?.[1]
       ? `${origin}${showAllMatch[1].replace(/&amp;/g, '&')}`
       : reviewUrl;
@@ -112,6 +138,7 @@ async function fetchAmazonReviews(parsedUrl, options) {
     for (let pageNumber = 1; pageNumber <= maxPages; pageNumber += 1) {
       const separator = preferredReviewUrl.includes('?') ? '&' : '?';
       const pageUrl = `${preferredReviewUrl}${separator}pageNumber=${pageNumber}`;
+
       await preparePage(page, pageUrl);
       await dismissCommonPopups(page);
 
@@ -121,6 +148,7 @@ async function fetchAmazonReviews(parsedUrl, options) {
           '[data-hook="review-body"] span',
           '[data-hook="review-collapsed"] span',
           '[data-hook="reviewBody"] span',
+          '[data-hook="reviewRichContentContainer"] span',
         ],
         maxReviews,
       );
@@ -134,14 +162,25 @@ async function fetchAmazonReviews(parsedUrl, options) {
         }
       }
 
-      const blocked = await page.locator('text=/robot|captcha|giriş yap|sign in|oturum aç/i').first().isVisible({ timeout: 500 }).catch(() => false);
-      if (blocked && !collected.length) {
-        throw new Error('Amazon yorum sayfası oturum açma veya koruma duvarı gösterdi. Bu ortamda tüm yorumlara erişim sağlanamadı.');
+      const blocked = await page
+        .locator('text=/robot|captcha|giris yap|sign in|oturum ac/i')
+        .first()
+        .isVisible({ timeout: 500 })
+        .catch(() => false);
+
+      if (blocked) {
+        if (collected.length) {
+          return { platform: 'amazon', productRef: asin, reviews: collected };
+        }
+
+        throw new Error(
+          'Amazon yorum sayfasi oturum acma veya koruma duvari gosterdi. Bu ortamda tum yorumlara erisim saglanamadi.',
+        );
       }
     }
 
     if (!collected.length) {
-      throw new Error('Amazon yorumları Playwright ile alınamadı.');
+      throw new Error('Amazon yorumlari Playwright ile alinamadi.');
     }
 
     return { platform: 'amazon', productRef: asin, reviews: collected };
@@ -157,17 +196,15 @@ async function fetchTrendyolReviews(parsedUrl, options) {
 
     const reviews = await extractTextList(
       page,
-      [
-        '[data-testid="comment-text"]',
-        '.comment-text',
-        '.user-comment-body',
-      ],
+      ['[data-testid="comment-text"]', '.comment-text', '.user-comment-body'],
       maxReviews,
     );
 
     if (!reviews.length) {
       const html = await page.content();
-      const inlineMatches = [...html.matchAll(/"commentText":"([^"]+)"/g)].map((match) => stripHtml(match[1]));
+      const inlineMatches = [...html.matchAll(/"commentText":"([^"]+)"/g)].map((match) =>
+        stripHtml(match[1]),
+      );
       const deduped = dedupeTrimmed(inlineMatches, maxReviews);
       if (deduped.length) {
         return {
@@ -177,7 +214,9 @@ async function fetchTrendyolReviews(parsedUrl, options) {
         };
       }
 
-      throw new Error('Trendyol yorumları Playwright ile alınamadı. Sayfa koruması veya yeni DOM yapısı nedeniyle boş dönmüş olabilir.');
+      throw new Error(
+        'Trendyol yorumlari Playwright ile alinamadi. Sayfa korumasi veya yeni DOM yapisi nedeniyle bos donmus olabilir.',
+      );
     }
 
     return {
@@ -207,7 +246,9 @@ async function fetchHepsiburadaReviews(parsedUrl, options) {
 
     if (!reviews.length) {
       const html = await page.content();
-      const inlineMatches = [...html.matchAll(/"reviewBody":"([^"]+)"/g)].map((match) => stripHtml(match[1]));
+      const inlineMatches = [...html.matchAll(/"reviewBody":"([^"]+)"/g)].map((match) =>
+        stripHtml(match[1]),
+      );
       const deduped = dedupeTrimmed(inlineMatches, maxReviews);
       if (deduped.length) {
         return {
@@ -217,7 +258,9 @@ async function fetchHepsiburadaReviews(parsedUrl, options) {
         };
       }
 
-      throw new Error('Hepsiburada yorumları Playwright ile alınamadı. Koruma veya DOM değişikliği olabilir.');
+      throw new Error(
+        'Hepsiburada yorumlari Playwright ile alinamadi. Koruma veya DOM degisikligi olabilir.',
+      );
     }
 
     return {
@@ -229,11 +272,15 @@ async function fetchHepsiburadaReviews(parsedUrl, options) {
 }
 
 async function fetchN11Reviews() {
-  throw new Error('n11 bu sunucu ortamında Cloudflare koruması gösteriyor. Playwright ile de ürün sayfasına stabil erişim sağlanamadı.');
+  throw new Error(
+    'n11 bu sunucu ortaminda Cloudflare korumasi gosteriyor. Playwright ile de urun sayfasina stabil erisim saglanamadi.',
+  );
 }
 
 async function fetchCiceksepetiReviews() {
-  throw new Error('Çiçeksepeti koruma sayfası döndürüyor. Playwright ile ürün yorumları bu ortamda alınamadı.');
+  throw new Error(
+    'Ciceksepeti koruma sayfasi donduruyor. Playwright ile urun yorumlari bu ortamda alinamadi.',
+  );
 }
 
 export async function fetchProductReviewsWithPlaywright(productUrl, options = {}) {
