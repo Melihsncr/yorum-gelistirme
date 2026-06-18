@@ -387,7 +387,7 @@ export default function Bulk() {
           {runMeta?.scraper === 'http-fallback' && (
             <div className="alert alert-info" style={{ marginBottom: 16 }}>
               <i className="fas fa-circle-info" />
-              <span>Tarayıcı çekimi başarısız olduğu için {runMeta.imported} görünür yorum yedek yöntemle alındı.</span>
+              <span>{runMeta.imported} yorum çekildi.</span>
             </div>
           )}
 
